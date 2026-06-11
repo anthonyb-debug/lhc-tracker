@@ -703,6 +703,15 @@ let config = {};
 let isFirstLoad = true;
 let agentList = [];
 
+// ── PRE-CONFIGURED CREDENTIALS (set these before deploying) ──
+// Fill in your values below — agents will skip setup and go straight to the board.
+const PRESET_CONFIG = {
+  apiKey:     'AIzaSyCF8Fw0l4nBzaaznt6tdeUbGHh4063FmkA',
+  sheetId:    '1LBQlvV0B8R9oRzRAZ4bP_7gztTf4O4JM-BPZ4hOx7wg',
+  sheetName:  'Calls',
+  scriptUrl:  'https://script.google.com/macros/s/AKfycbyhwRWRCSlWJDXp9nMvgc6i6SFH0Ieoi4YHdHiDRzbvElH8J72ue4FtFne8-rl75Nu8NQ/exec',
+};
+
 // ── INIT ──
 window.onload = () => {
   // restore theme preference
@@ -713,18 +722,28 @@ window.onload = () => {
     document.getElementById('theme-label').textContent = 'Dark';
   }
 
-  const saved = localStorage.getItem('alliance_config');
-  if (saved) {
-    config = JSON.parse(saved);
+  // Use preset config if filled in, otherwise fall back to localStorage
+  const hasPreset = PRESET_CONFIG.apiKey && PRESET_CONFIG.sheetId;
+  if (hasPreset) {
+    config = { ...PRESET_CONFIG };
+    // Also save to localStorage so the Settings panel shows the values
+    localStorage.setItem('alliance_config', JSON.stringify(config));
+  } else {
+    const saved = localStorage.getItem('alliance_config');
+    if (saved) {
+      config = JSON.parse(saved);
+    }
+  }
+
+  if (config.apiKey && config.sheetId) {
     document.getElementById('api-key').value = config.apiKey || '';
     document.getElementById('sheet-id').value = config.sheetId || '';
     document.getElementById('sheet-name').value = config.sheetName || 'Sheet1';
     document.getElementById('script-url').value = config.scriptUrl || '';
-    if (config.apiKey && config.sheetId) {
-      showApp();
-      loadData();
-    }
+    showApp();
+    loadData();
   }
+
   // populate disposition filter
   const dispFilter = document.getElementById('filter-disp');
   DISPOSITIONS.filter(d => d).forEach(d => {
