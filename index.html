@@ -402,8 +402,9 @@
   .td-notes { font-size: 11px; color: var(--text-dim); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .td-notes.notes-missing { color: var(--red); font-style: italic; }
   .notes-warn-icon { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--red); }
-  tbody tr.row-notes-missing { background: rgba(248,113,113,0.04); }
-  tbody tr.row-notes-missing:hover { background: rgba(248,113,113,0.09); }
+  /* no-disposition row highlight */
+  tbody tr.row-no-disp { background: rgba(251,191,36,0.08); border-left: 3px solid var(--yellow); }
+  tbody tr.row-no-disp:hover { background: rgba(251,191,36,0.15); }
 
   /* ── PROGRESS BAR ── */
   .progress-wrap { width: 100%; margin-bottom: 10px; }
@@ -979,7 +980,7 @@ function updateRowCells(tr, r) {
   cells[6].innerHTML = missingNotes
     ? '<span class="notes-warn-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fill notes</span>'
     : r.notes;
-  tr.classList.toggle('row-notes-missing', missingNotes);
+  tr.classList.toggle('row-no-disp', !r.disp);
 
   const select = cells[7].querySelector('select');
   if (select && !dispDropdownOpen && select.value !== r.disp) {
@@ -1115,7 +1116,7 @@ function renderTable() {
   }
 
   tbody.innerHTML = rows.map(r => `
-    <tr data-rownum="${r.rowNum}" class="${!r.notes || !r.notes.trim() ? 'row-notes-missing' : ''}">
+    <tr data-rownum="${r.rowNum}" class="${!r.disp ? 'row-no-disp' : ''}">
       <td class="td-row-num">${r.rowNum}</td>
       <td class="td-phone">${r.phone}</td>
       <td>${statusBadge(r.status)}</td>
