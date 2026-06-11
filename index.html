@@ -666,6 +666,16 @@ function doGet(e) {
 <div id="toast"></div>
 
 <script>
+// ── TIMEZONE: Display all dates/times in Eastern Standard Time ──
+// This ensures the page renders in EST regardless of the agent's local timezone
+try { Intl.DateTimeFormat = new Proxy(Intl.DateTimeFormat, {
+  construct(Target, args) {
+    if (args[1] && !args[1].timeZone) args[1].timeZone = 'America/New_York';
+    else if (!args[1]) args[1] = { timeZone: 'America/New_York' };
+    return new Target(...args);
+  }
+}); } catch(e) {}
+
 // ── THEME TOGGLE ──
 function toggleTheme() {
   const isLight = document.documentElement.classList.toggle('light');
@@ -1021,10 +1031,10 @@ function getFilteredSortedRows() {
       const da = parseRowDate(a.date) || '';
       const db = parseRowDate(b.date) || '';
       if (da !== db) return da < db ? -sortDir : sortDir;
-      // same date — break tie by time
-      const ta = a.time || '';
-      const tb = b.time || '';
-      return ta < tb ? -sortDir : ta > tb ? sortDir : 0;
+      // same date — break tie by time (parse back to ms for correct AM/PM ordering)
+      const ta = parseTimeToMs(a.time);
+      const tb = parseTimeToMs(b.time);
+      return (ta - tb) * -sortDir;
     }
     return String(va).localeCompare(String(vb)) * sortDir;
   });
