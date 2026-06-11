@@ -713,6 +713,7 @@ let config = {};
 let isFirstLoad = true;
 let agentList = [];
 let refreshTimer = null;
+let dispDropdownOpen = false; // true while any disp select is open
 
 // ── PRE-CONFIGURED CREDENTIALS (set these before deploying) ──
 // Fill in your values below — agents will skip setup and go straight to the board.
@@ -762,6 +763,37 @@ window.onload = () => {
     o.value = d; o.textContent = d;
     dispFilter.appendChild(o);
   });
+
+  // ── TRACK OPEN DISPOSITION DROPDOWNS ──
+  // Use event delegation on the table body so we don't have to re-attach listeners
+  // every time renderTable() rebuilds the rows.
+  const tbody = document.getElementById('table-body');
+  tbody.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('disp-select')) {
+      dispDropdownOpen = true;
+    }
+  });
+  tbody.addEventListener('focus', e => {
+    if (e.target.classList.contains('disp-select')) {
+      dispDropdownOpen = true;
+    }
+  }, true); // capture phase so it fires before the browser opens the picker
+  tbody.addEventListener('blur', e => {
+    if (e.target.classList.contains('disp-select')) {
+      dispDropdownOpen = false;
+    }
+  }, true);
+  tbody.addEventListener('change', e => {
+    if (e.target.classList.contains('disp-select')) {
+      dispDropdownOpen = false;
+    }
+  });
+  tbody.addEventListener('keydown', e => {
+    // Escape closes a native select without firing blur on some browsers
+    if (e.key === 'Escape' && e.target.classList.contains('disp-select')) {
+      dispDropdownOpen = false;
+    }
+  });
 };
 
 // ── CONNECT ──
@@ -805,7 +837,7 @@ function showAppsScriptHelp() {
 // ── REFRESH SCHEDULER (prevents stacking) ──
 function scheduleRefresh() {
   if (refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer = setTimeout(loadData, 5000);
+  refreshTimer = setTimeout(loadData, 60000);
 }
 
 // ── LOAD DATA ──
@@ -911,12 +943,12 @@ function mergeAndUpdate(newRows) {
 
   if (agentsChanged) populateAgentFilter();
 
-  // Skip full re-render if a disposition dropdown is currently open/focused
-  // to avoid closing it mid-selection during a background sync.
-  const activeEl = document.activeElement;
-  const isDispFocused = activeEl && activeEl.classList.contains('disp-select');
-  if (isDispFocused) {
-    // Only patch the cells that changed, leaving open dropdowns untouched
+  // Skip full re-render while a disposition dropdown is open.
+  // dispDropdownOpen is set via event delegation (mousedown/blur) on the table body —
+  // more reliable than document.activeElement, which loses the select reference
+  // once the OS-level picker opens on most browsers.
+  if (dispDropdownOpen) {
+    // Patch only changed rows in-place; don't touch the open dropdown's row
     changedRowNums.forEach(rowNum => {
       const tr = document.querySelector(`tr[data-rownum="${rowNum}"]`);
       if (tr) {
@@ -924,11 +956,6 @@ function mergeAndUpdate(newRows) {
         if (nr) updateRowCells(tr, nr);
       }
     });
-    // If rows were added/removed, queue a deferred full re-render for after the dropdown closes
-    if (structureChanged) {
-      activeEl.addEventListener('change', () => renderTable(), { once: true });
-      activeEl.addEventListener('blur',   () => renderTable(), { once: true });
-    }
     return;
   }
 
@@ -955,7 +982,7 @@ function updateRowCells(tr, r) {
   tr.classList.toggle('row-notes-missing', missingNotes);
 
   const select = cells[7].querySelector('select');
-  if (select && document.activeElement !== select && select.value !== r.disp) {
+  if (select && !dispDropdownOpen && select.value !== r.disp) {
     select.value = r.disp;
     select.classList.toggle('has-value', !!r.disp);
     select.classList.add('saved');
