@@ -837,7 +837,7 @@ async function loadData() {
     setSyncState('live', `Live · ${allRows.length} calls`);
     isFirstLoad = false;
     // auto-refresh every 60 seconds
-    setTimeout(loadData, 60000);
+    setTimeout(loadData, 5000);
   } catch(e) {
     if (isFirstLoad) {
       setSyncState('error', 'Error');
@@ -852,7 +852,7 @@ async function loadData() {
       setSyncState('error', 'Sync error');
       showToast('❌ Background sync failed: ' + e.message, 'error');
       // retry on the normal schedule
-      setTimeout(loadData, 60000);
+      setTimeout(loadData, 5000);
     }
   }
 }
