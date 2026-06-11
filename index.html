@@ -837,14 +837,20 @@ async function loadData() {
     setSyncState('live', `Live · ${allRows.length} calls`);
     isFirstLoad = false;
     // auto-refresh every 60 seconds
-    setTimeout(loadData, 60000);
+    setTimeout(loadData, 5000);
   } catch(e) {
     if (isFirstLoad) {
       setSyncState('error', 'Error');
       tbody.innerHTML = `<tr><td colspan="8"><div class="state-center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <p style="color:var(--red);">Failed to load: ${e.message}</p>
-        <p style="font-size:12px;">Check your API Key and Spreadsheet ID, and make sure the sheet is shared as "Anyone with the link".</p>
+        <p style="color:var(--red);font-weight:600;">Failed to load: ${e.message}</p>
+        <p style="font-size:12px;margin-top:8px;text-align:left;line-height:1.8;">
+          Common fixes:<br>
+          ① Open your Google Sheet → <strong>Share → Anyone with the link → Viewer</strong><br>
+          ② In Google Cloud Console, make sure the <strong>Google Sheets API is enabled</strong><br>
+          ③ Check the API Key has <strong>no referrer restrictions</strong> (or add your Vercel domain)<br>
+          ④ Confirm the tab is named exactly <strong>"Calls"</strong> (case-sensitive)
+        </p>
       </div></td></tr>`;
       showToast('❌ ' + e.message, 'error');
     } else {
@@ -852,7 +858,7 @@ async function loadData() {
       setSyncState('error', 'Sync error');
       showToast('❌ Background sync failed: ' + e.message, 'error');
       // retry on the normal schedule
-      setTimeout(loadData, 60000);
+      setTimeout(loadData, 5000);
     }
   }
 }
