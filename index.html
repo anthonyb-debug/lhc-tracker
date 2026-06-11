@@ -707,11 +707,12 @@ const DISPOSITIONS = [
 
 // ── STATE ──
 let allRows = [];
-let sortCol = 'date';
+let sortCol = 'rowNum';
 let sortDir = -1;
 let config = {};
 let isFirstLoad = true;
 let agentList = [];
+let refreshTimer = null;
 
 // ── PRE-CONFIGURED CREDENTIALS (set these before deploying) ──
 // Fill in your values below — agents will skip setup and go straight to the board.
@@ -801,8 +802,15 @@ function showAppsScriptHelp() {
   el.style.display = 'flex';
 }
 
+// ── REFRESH SCHEDULER (prevents stacking) ──
+function scheduleRefresh() {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(loadData, 5000);
+}
+
 // ── LOAD DATA ──
 async function loadData() {
+  if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
   const tbody = document.getElementById('table-body');
 
   if (isFirstLoad) {
@@ -847,7 +855,7 @@ async function loadData() {
     setSyncState('live', `Live · ${allRows.length} calls`);
     isFirstLoad = false;
     // auto-refresh every 60 seconds
-    setTimeout(loadData, 5000);
+    scheduleRefresh();
   } catch(e) {
     if (isFirstLoad) {
       setSyncState('error', 'Error');
@@ -868,7 +876,7 @@ async function loadData() {
       setSyncState('error', 'Sync error');
       showToast('❌ Background sync failed: ' + e.message, 'error');
       // retry on the normal schedule
-      setTimeout(loadData, 5000);
+      scheduleRefresh();
     }
   }
 }
@@ -903,32 +911,8 @@ function mergeAndUpdate(newRows) {
 
   if (agentsChanged) populateAgentFilter();
 
-  if (structureChanged) {
-    // rows added/removed — needs a full re-render to fix layout
-    renderTable();
-    return;
-  }
-
-  // check whether the visible (filtered/sorted) order changed
-  const visibleRows = getFilteredSortedRows();
-  const tbody = document.getElementById('table-body');
-  const currentTrs = [...tbody.querySelectorAll('tr[data-rownum]')];
-  const currentOrder = currentTrs.map(tr => Number(tr.dataset.rownum));
-  const newOrder = visibleRows.map(r => r.rowNum);
-
-  if (JSON.stringify(currentOrder) !== JSON.stringify(newOrder)) {
-    renderTable();
-    return;
-  }
-
-  // same rows, same order — patch only the cells that changed
-  changedRowNums.forEach(rowNum => {
-    const tr = tbody.querySelector(`tr[data-rownum="${rowNum}"]`);
-    const r = newMap.get(rowNum);
-    if (tr && r) updateRowCells(tr, r);
-  });
-
-  updateStats(visibleRows);
+  // Always do a full re-render so the sort order stays correct
+  renderTable();
 }
 
 // ── PATCH A SINGLE ROW'S CELLS IN PLACE ──
@@ -961,24 +945,41 @@ function updateRowCells(tr, r) {
 // ── DATE FILTER HELPERS ──
 // Normalise a date string from the sheet (handles M/D/YYYY, MM/DD/YYYY, YYYY-MM-DD, etc.)
 // Returns "YYYY-MM-DD" for comparison, or null if unparseable.
+// Parse "M/D/YYYY" or "MM/DD/YYYY" or "YYYY-MM-DD" → "YYYY-MM-DD" string (no timezone shift)
 function parseRowDate(str) {
   if (!str) return null;
   str = str.trim();
-  // already ISO
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
-  // M/D/YYYY or MM/DD/YYYY
   const mdy = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (mdy) {
     const [, m, d, y] = mdy;
     return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
   }
-  // fallback: try Date.parse
-  const ts = Date.parse(str);
-  if (!isNaN(ts)) {
-    const dt = new Date(ts);
-    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-  }
   return null;
+}
+
+// Parse time string (e.g. "3:45:22 PM", "15:45:22") → sortable number in EST
+// Since the times in the sheet are already EST, we just need a numeric value for comparison
+function parseTimeToMs(timeStr) {
+  if (!timeStr) return 0;
+  timeStr = timeStr.trim();
+  // Try "H:MM:SS AM/PM" or "H:MM AM/PM"
+  const ampm = timeStr.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  if (ampm) {
+    let h = parseInt(ampm[1], 10);
+    const m = parseInt(ampm[2], 10);
+    const s = parseInt(ampm[3] || '0', 10);
+    const period = ampm[4].toUpperCase();
+    if (period === 'AM' && h === 12) h = 0;
+    if (period === 'PM' && h !== 12) h += 12;
+    return h * 3600 + m * 60 + s;
+  }
+  // Try 24-hour "HH:MM:SS" or "HH:MM"
+  const h24 = timeStr.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (h24) {
+    return parseInt(h24[1],10)*3600 + parseInt(h24[2],10)*60 + parseInt(h24[3]||'0',10);
+  }
+  return 0;
 }
 
 function onDateChange() {
