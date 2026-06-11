@@ -911,7 +911,28 @@ function mergeAndUpdate(newRows) {
 
   if (agentsChanged) populateAgentFilter();
 
-  // Always do a full re-render so the sort order stays correct
+  // Skip full re-render if a disposition dropdown is currently open/focused
+  // to avoid closing it mid-selection during a background sync.
+  const activeEl = document.activeElement;
+  const isDispFocused = activeEl && activeEl.classList.contains('disp-select');
+  if (isDispFocused) {
+    // Only patch the cells that changed, leaving open dropdowns untouched
+    changedRowNums.forEach(rowNum => {
+      const tr = document.querySelector(`tr[data-rownum="${rowNum}"]`);
+      if (tr) {
+        const nr = newMap.get(rowNum);
+        if (nr) updateRowCells(tr, nr);
+      }
+    });
+    // If rows were added/removed, queue a deferred full re-render for after the dropdown closes
+    if (structureChanged) {
+      activeEl.addEventListener('change', () => renderTable(), { once: true });
+      activeEl.addEventListener('blur',   () => renderTable(), { once: true });
+    }
+    return;
+  }
+
+  // No dropdown open — safe to do a full re-render
   renderTable();
 }
 
