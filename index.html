@@ -821,6 +821,8 @@ let isFirstLoad = true;
 let agentList = [];
 let refreshTimer = null;
 let dispDropdownOpen = false; // true while any disp select is open
+let backoffLevel = 0; // 0=60s, 1=120s, 2=300s after repeated errors
+const BACKOFF_INTERVALS = [60000, 120000, 300000]; // ms
 
 // ── PRE-CONFIGURED CREDENTIALS (set these before deploying) ──
 // Fill in your values below — agents will skip setup and go straight to the board.
@@ -944,11 +946,17 @@ function showAppsScriptHelp() {
   el.style.display = 'flex';
 }
 
-// ── REFRESH SCHEDULER (prevents stacking) ──
-function scheduleRefresh() {
+// ── REFRESH SCHEDULER (prevents stacking, uses 60s base to avoid API quota) ──
+function scheduleRefresh(useBackoff = false) {
   if (refreshTimer) clearTimeout(refreshTimer);
-  startCountdown();
-  refreshTimer = setTimeout(loadData, 5000);
+  if (useBackoff) {
+    backoffLevel = Math.min(backoffLevel + 1, BACKOFF_INTERVALS.length - 1);
+  } else {
+    backoffLevel = 0;
+  }
+  const delay = BACKOFF_INTERVALS[backoffLevel];
+  startCountdown(Math.round(delay / 1000));
+  refreshTimer = setTimeout(loadData, delay);
 }
 
 // ── LOAD DATA ──
@@ -997,8 +1005,8 @@ async function loadData() {
 
     setSyncState('live', `Live · ${allRows.length} calls`);
     isFirstLoad = false;
-    // auto-refresh every 60 seconds
-    scheduleRefresh();
+    // auto-refresh every 60 seconds (quota-safe)
+    scheduleRefresh(false);
   } catch(e) {
     if (isFirstLoad) {
       setSyncState('error', 'Error');
@@ -1015,11 +1023,10 @@ async function loadData() {
       </div></td></tr>`;
       showToast('❌ ' + e.message, 'error');
     } else {
-      // background sync failure: keep showing existing data, just flag the dot
-      setSyncState('error', 'Sync error');
+      // background sync failure: keep showing existing data, back off to reduce quota pressure
+      setSyncState('error', 'Sync error – retrying…');
       showToast('❌ Background sync failed: ' + e.message, 'error');
-      // retry on the normal schedule
-      scheduleRefresh();
+      scheduleRefresh(true); // exponential backoff
     }
   }
 }
@@ -1378,12 +1385,12 @@ function showToast(msg, type = 'success') {
   toastTimer = setTimeout(() => t.className = '', 3500);
 }
 // ── REFRESH COUNTDOWN TIMER ──
-let countdownValue = 5;
+let countdownValue = 60;
 let countdownTimer = null;
 
-function startCountdown() {
+function startCountdown(seconds = 60) {
   if (countdownTimer) clearInterval(countdownTimer);
-  countdownValue = 5;
+  countdownValue = seconds;
   updateCountdownDisplay();
   countdownTimer = setInterval(() => {
     countdownValue--;
@@ -1397,7 +1404,15 @@ function startCountdown() {
 
 function updateCountdownDisplay() {
   const el = document.getElementById('refresh-countdown');
-  if (el) el.textContent = countdownValue > 0 ? countdownValue + 's' : '↻';
+  if (!el) return;
+  if (countdownValue <= 0) { el.textContent = '↻'; return; }
+  if (countdownValue >= 60) {
+    const m = Math.floor(countdownValue / 60);
+    const s = countdownValue % 60;
+    el.textContent = s > 0 ? `${m}m${s}s` : `${m}m`;
+  } else {
+    el.textContent = countdownValue + 's';
+  }
 }
 
 function manualRefresh() {
@@ -1405,6 +1420,7 @@ function manualRefresh() {
   if (icon) { icon.classList.add('spinning'); setTimeout(() => icon.classList.remove('spinning'), 500); }
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
   if (refreshTimer)   { clearTimeout(refreshTimer);   refreshTimer   = null; }
+  backoffLevel = 0; // reset backoff on manual refresh
   loadData();
 }
 
