@@ -81,7 +81,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px 20px;
-    background: linear-gradient(to right, #a8d4f5, #1a4a8a);
+    background: linear-gradient(135deg, #1a4a8a 0%, #2a6fc4 40%, #a8d4f5 100%);
     border-bottom: none;
     color: #fff;
     position: sticky;
@@ -482,6 +482,23 @@
     .td-agent, .td-notes { display: none; }
   }
 
+  /* ── REFRESH COUNTDOWN ── */
+  #refresh-btn { min-width: 70px; }
+  #refresh-countdown { font-variant-numeric: tabular-nums; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { animation: spin 0.5s linear; }
+
+  /* ── CSV MODAL ── */
+  .csv-modal-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 14px; flex-wrap: wrap; }
+  .csv-modal-row label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; }
+  .csv-modal-row input[type="date"] {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text); font-size: 12px;
+    padding: 6px 10px; font-family: var(--mono);
+  }
+  .csv-modal-row input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+  :root.light .csv-modal-row input[type="date"]::-webkit-calendar-picker-indicator { filter: none; opacity: 0.5; }
+
   /* ── MODALS ── */
   .modal-overlay {
     display: none; position: fixed; inset: 0;
@@ -568,6 +585,10 @@
       <div class="sync-dot" id="sync-dot"></div>
       <span id="sync-label">Not connected</span>
     </div>
+    <button class="btn-secondary" id="csv-btn" onclick="showCsvModal()" style="display:none;" title="Download CSV">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV
+    </button>
     <button class="btn-secondary" id="guide-btn" onclick="showGuide()" style="display:none;">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       Guide
@@ -580,9 +601,9 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
     </button>
-    <button class="btn-secondary" id="refresh-btn" onclick="loadData()" style="display:none;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      Refresh
+    <button class="btn-secondary" id="refresh-btn" onclick="manualRefresh()" style="display:none;" title="Click to refresh now">
+      <svg width="13" height="13" id="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <span id="refresh-countdown">5s</span>
     </button>
   </div>
 </header>
@@ -913,6 +934,7 @@ function showApp() {
   document.getElementById('app').style.display = 'block';
   document.getElementById('settings-btn').style.display = 'flex';
   document.getElementById('refresh-btn').style.display = 'flex';
+  document.getElementById('csv-btn').style.display = 'flex';
   document.getElementById('guide-btn').style.display = 'flex';
   document.getElementById('dashboard-btn').style.display = 'flex';
 }
@@ -923,22 +945,10 @@ function showAppsScriptHelp() {
 }
 
 // ── REFRESH SCHEDULER (prevents stacking) ──
-// Base interval is longer than 60s, and jitter spreads requests out so that
-// many agents who all load the board around the same time don't poll the
-// Sheets API in the same second. On errors (e.g. quota exceeded) the
-// interval backs off exponentially up to MAX_REFRESH_MS, then resets to the
-// base interval once a fetch succeeds again.
-const BASE_REFRESH_MS = 90000;   // 90s baseline (was 60s)
-const MAX_REFRESH_MS  = 300000;  // cap backoff at 5 minutes
-let consecutiveErrors = 0;
-
 function scheduleRefresh() {
   if (refreshTimer) clearTimeout(refreshTimer);
-  const backoff = consecutiveErrors > 0
-    ? Math.min(BASE_REFRESH_MS * Math.pow(2, consecutiveErrors), MAX_REFRESH_MS)
-    : BASE_REFRESH_MS;
-  const jitter = (Math.random() - 0.5) * 30000; // ± 15s
-  refreshTimer = setTimeout(loadData, Math.max(20000, backoff + jitter));
+  startCountdown();
+  refreshTimer = setTimeout(loadData, 5000);
 }
 
 // ── LOAD DATA ──
@@ -987,8 +997,7 @@ async function loadData() {
 
     setSyncState('live', `Live · ${allRows.length} calls`);
     isFirstLoad = false;
-    consecutiveErrors = 0;
-    // auto-refresh on the schedule (see scheduleRefresh)
+    // auto-refresh every 60 seconds
     scheduleRefresh();
   } catch(e) {
     if (isFirstLoad) {
@@ -1007,10 +1016,9 @@ async function loadData() {
       showToast('❌ ' + e.message, 'error');
     } else {
       // background sync failure: keep showing existing data, just flag the dot
-      consecutiveErrors++;
       setSyncState('error', 'Sync error');
       showToast('❌ Background sync failed: ' + e.message, 'error');
-      // retry with exponential backoff (see scheduleRefresh)
+      // retry on the normal schedule
       scheduleRefresh();
     }
   }
@@ -1369,6 +1377,81 @@ function showToast(msg, type = 'success') {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.className = '', 3500);
 }
+// ── REFRESH COUNTDOWN TIMER ──
+let countdownValue = 5;
+let countdownTimer = null;
+
+function startCountdown() {
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownValue = 5;
+  updateCountdownDisplay();
+  countdownTimer = setInterval(() => {
+    countdownValue--;
+    updateCountdownDisplay();
+    if (countdownValue <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+  }, 1000);
+}
+
+function updateCountdownDisplay() {
+  const el = document.getElementById('refresh-countdown');
+  if (el) el.textContent = countdownValue > 0 ? countdownValue + 's' : '↻';
+}
+
+function manualRefresh() {
+  const icon = document.getElementById('refresh-icon');
+  if (icon) { icon.classList.add('spinning'); setTimeout(() => icon.classList.remove('spinning'), 500); }
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  if (refreshTimer)   { clearTimeout(refreshTimer);   refreshTimer   = null; }
+  loadData();
+}
+
+// ── CSV DOWNLOAD ──
+function showCsvModal() {
+  document.getElementById('csv-modal').classList.add('open');
+}
+
+function clearCsvDates() {
+  document.getElementById('csv-from').value = '';
+  document.getElementById('csv-to').value   = '';
+}
+
+function downloadCSV() {
+  const from = document.getElementById('csv-from').value;
+  const to   = document.getElementById('csv-to').value;
+
+  let rows = allRows.filter(r => {
+    if (from || to) {
+      const rd = parseRowDate(r.date) || '';
+      if (from && rd < from) return false;
+      if (to   && rd > to)   return false;
+    }
+    return true;
+  });
+
+  // Sort by rowNum ascending for CSV export
+  rows = [...rows].sort((a,b) => a.rowNum - b.rowNum);
+
+  const escape = v => `"${String(v||'').replace(/"/g,'""')}"`;
+  const header = ['Date','Time','Phone','Status','Agent','Disposition'];
+  const lines  = [header.join(',')];
+  rows.forEach(r => {
+    lines.push([r.date, r.time, r.phone, r.status, r.agent, r.disp].map(escape).join(','));
+  });
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const dateTag = from && to ? `_${from}_to_${to}` : from ? `_from_${from}` : to ? `_to_${to}` : '';
+  a.href     = url;
+  a.download = `calls${dateTag}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeModal('csv-modal');
+}
+
 // ── COPY PHONE ──
 function copyPhone(btn, phone) {
   navigator.clipboard.writeText(phone).then(() => {
@@ -1434,8 +1517,23 @@ function renderDashboard() {
     const d = r.date || 'Unknown';
     if (!byDate[d]) byDate[d] = {};
     const a = r.agent || 'Unknown';
-    if (!byDate[d][a]) byDate[d][a] = { total: 0, done: 0, pending: 0 };
+    if (!byDate[d][a]) byDate[d][a] = { total: 0, answered: 0, hungup: 0, noanswer: 0, done: 0, pending: 0 };
     byDate[d][a].total++;
+    // Categorise call type by status or disposition
+    const disp  = (r.disp  || '').toLowerCase();
+    const status = (r.status || '').toLowerCase();
+    if (status.includes('answered') || status.includes('inbound') || status.includes('completed')) {
+      byDate[d][a].answered++;
+    } else if (status.includes('no answer') || status.includes('missed') || status.includes('voicemail') || disp.includes('hung up') || disp.includes('dead air')) {
+      byDate[d][a].hungup++;
+    } else if (status.includes('no-answer') || status.includes('no answer') || disp.includes('missed call')) {
+      byDate[d][a].noanswer++;
+    } else {
+      // fallback: bucket by disposition keyword
+      if (disp.includes('hung') || disp.includes('dead air') || disp.includes('automated')) byDate[d][a].hungup++;
+      else if (disp.includes('missed') || disp === '') byDate[d][a].noanswer++;
+      else byDate[d][a].answered++;
+    }
     if (r.disp) byDate[d][a].done++;
     else byDate[d][a].pending++;
   });
@@ -1454,11 +1552,14 @@ function renderDashboard() {
       const dayTotal = agents.reduce((s,[,v]) => s + v.total, 0);
       const dayDone  = agents.reduce((s,[,v]) => s + v.done, 0);
       html += `<div class="dash-date-group">
-        <div class="dash-date-label">${date} &mdash; ${dayTotal} calls, ${dayDone} dispositioned</div>
+        <div class="dash-date-label">${date} &mdash; ${dayTotal} calls &nbsp;|&nbsp; <span style="color:var(--green)">${agents.reduce((s,[,v])=>s+v.answered,0)} answered</span> &nbsp;|&nbsp; <span style="color:var(--red)">${agents.reduce((s,[,v])=>s+v.hungup,0)} hung up</span> &nbsp;|&nbsp; <span style="color:var(--text-muted)">${agents.reduce((s,[,v])=>s+v.noanswer,0)} no answer</span></div>
         <table class="dash-table">
           <thead><tr>
             <th>Agent</th>
-            <th class="num">Total Calls</th>
+            <th class="num">Total</th>
+            <th class="num" style="color:var(--green)">Answered</th>
+            <th class="num" style="color:var(--red)">Hung Up</th>
+            <th class="num" style="color:var(--text-muted)">No Answer</th>
             <th class="num">Dispositioned</th>
             <th class="num">Pending</th>
             <th class="num">Completion %</th>
@@ -1469,6 +1570,9 @@ function renderDashboard() {
         html += `<tr>
           <td>${agent}</td>
           <td class="num">${s.total}</td>
+          <td class="num" style="color:var(--green)">${s.answered}</td>
+          <td class="num" style="color:var(--red)">${s.hungup}</td>
+          <td class="num" style="color:var(--text-muted)">${s.noanswer}</td>
           <td class="num">${s.done}</td>
           <td class="num">${s.pending}</td>
           <td class="num"><span class="dash-pct ${cls}">${pct}%</span></td>
@@ -1481,6 +1585,36 @@ function renderDashboard() {
 }
 
 </script>
+
+<!-- CSV DOWNLOAD MODAL -->
+<div class="modal-overlay" id="csv-modal" onclick="closeModal('csv-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:480px;">
+    <div class="modal-header">
+      <span>⬇ Download CSV</span>
+      <button class="modal-close" onclick="closeModal('csv-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="csv-modal-row">
+        <div>
+          <label>From date</label>
+          <input type="date" id="csv-from">
+        </div>
+        <div>
+          <label>To date</label>
+          <input type="date" id="csv-to">
+        </div>
+        <button class="btn-secondary" onclick="clearCsvDates()" style="padding:6px 10px;font-size:11px;">Clear</button>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">
+        Leave dates blank to export all records. Columns: Date, Time, Phone, Status, Agent, Disposition.
+      </p>
+      <button onclick="downloadCSV()" style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download CSV
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- GUIDE MODAL -->
 <div class="modal-overlay" id="guide-modal" onclick="closeModal('guide-modal')">
