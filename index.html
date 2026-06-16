@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alliance Call Disposition Board</title>
+<title>Legacy Call Disposition Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
     --bg: #0f1117;
@@ -564,9 +565,118 @@
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: 6px; color: var(--text); font-size: 12px; padding: 4px 8px;
   }
+
+  /* ── GOOGLE AUTH LOGIN OVERLAY ── */
+  #auth-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #0a0f1e 0%, #0f1a2e 50%, #0a1628 100%);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.4s ease;
+  }
+  #auth-overlay.hidden { opacity: 0; pointer-events: none; }
+
+  .auth-card {
+    background: rgba(24,28,39,0.97);
+    border: 1px solid rgba(79,142,247,0.25);
+    border-radius: 20px; padding: 48px 44px;
+    width: 100%; max-width: 420px; text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(79,142,247,0.1);
+    backdrop-filter: blur(20px);
+  }
+  .auth-logo-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 68px; height: 68px;
+    background: linear-gradient(135deg, #1a4a8a, #2a6fc4);
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(42,111,196,0.4);
+    margin-bottom: 16px;
+  }
+  .auth-logo-badge svg { width: 36px; height: 36px; }
+  .auth-app-title { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.3px; line-height: 1.2; margin-bottom: 6px; }
+  .auth-app-subtitle { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 0; }
+  .auth-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 28px 0; }
+  .auth-prompt { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.6; margin-bottom: 24px; }
+  .auth-google-btn {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; background: #fff; color: #3c4043;
+    border: none; border-radius: 10px; padding: 13px 20px;
+    font-size: 15px; font-weight: 600; font-family: var(--font);
+    cursor: pointer; transition: box-shadow 0.2s, background 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .auth-google-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.4); background: #f8f9fa; }
+  .auth-google-btn:active { transform: scale(0.98); }
+  .auth-google-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .auth-error {
+    margin-top: 16px; background: rgba(248,113,113,0.12);
+    border: 1px solid rgba(248,113,113,0.3); border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; color: #f87171; line-height: 1.5; display: none;
+  }
+  .auth-error.visible { display: block; }
+  .auth-loading { margin-top: 20px; display: none; align-items: center; justify-content: center; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.5); }
+  .auth-loading.visible { display: flex; }
+  .auth-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .auth-footer { margin-top: 28px; font-size: 11px; color: rgba(255,255,255,0.25); line-height: 1.6; }
+
+  /* ── USER CHIP IN HEADER (post-login) ── */
+  .user-info-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px; padding: 4px 10px 4px 5px;
+    font-size: 12px; color: rgba(255,255,255,0.9); max-width: 220px;
+  }
+  .user-avatar-initials {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: linear-gradient(135deg, #4f8ef7, #2a6fc4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+    border: 1.5px solid rgba(255,255,255,0.3);
+  }
+  .user-details { overflow: hidden; }
+  .user-name { font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; display: block; }
+  .user-email { font-size: 10px; color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; display: block; }
+  .logout-btn {
+    background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 600;
+    color: #f87171; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+    white-space: nowrap; font-family: var(--font);
+  }
+  .logout-btn:hover { background: rgba(248,113,113,0.25); border-color: rgba(248,113,113,0.5); }
 </style>
 </head>
 <body>
+
+<!-- ── GOOGLE SIGN-IN OVERLAY ── -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo-badge">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+        <path d="M7 8h10M7 12h10M7 16h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="auth-app-title">Legacy Call Disposition Tracker</div>
+    <div class="auth-app-subtitle">Alliance Global Solutions</div>
+    <hr class="auth-divider">
+    <p class="auth-prompt">Sign in with your company Google account.<br>Only <strong>@allianceglobalsolutions.com</strong> addresses are permitted.</p>
+    <button class="auth-google-btn" id="google-signin-btn" onclick="initiateGoogleSignIn()">
+      <svg width="20" height="20" viewBox="0 0 24 24">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-loading" id="auth-loading">
+      <div class="auth-spinner"></div>
+      <span>Verifying your account…</span>
+    </div>
+    <div class="auth-footer">Secure sign-in via Google OAuth 2.0 &nbsp;·&nbsp; Company accounts only</div>
+  </div>
+</div>
 
 <header>
   <div class="logo">
@@ -605,6 +715,14 @@
       <svg width="13" height="13" id="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       <span id="refresh-countdown">5s</span>
     </button>
+    <div class="user-info-chip" id="user-info-chip" style="display:none;">
+      <div class="user-avatar-initials" id="user-initials"></div>
+      <div class="user-details">
+        <span class="user-name" id="user-display-name"></span>
+        <span class="user-email" id="user-display-email"></span>
+      </div>
+    </div>
+    <button class="logout-btn" id="logout-btn" style="display:none;" onclick="signOut()">Sign out</button>
   </div>
 </header>
 
@@ -771,6 +889,161 @@ function doGet(e) {
 </div>
 
 <div id="toast"></div>
+
+<!-- ── GOOGLE AUTHENTICATION ── -->
+<script>
+// =================================================================
+//  GOOGLE SIGN-IN  –  Alliance Global Solutions
+//  Uses Google Identity Services (GIS) popup flow.
+//  Allowed domain: @allianceglobalsolutions.com
+//
+//  SETUP: Replace the value below with your Google OAuth Client ID.
+//  1. Go to https://console.cloud.google.com
+//  2. APIs & Services → Credentials → Create OAuth 2.0 Client ID
+//  3. Application type: Web application
+//  4. Authorized JavaScript origins: add your site's domain
+//  5. Copy the Client ID (ends with .apps.googleusercontent.com)
+// =================================================================
+const GOOGLE_CLIENT_ID = '534123590884-ter5lh3231fc2ldesd65j6pieb5rhkkh.apps.googleusercontent.com';
+const ALLOWED_DOMAIN   = 'allianceglobalsolutions.com';
+const SESSION_KEY      = 'ags_disp_session';
+
+// ── Session helpers ──────────────────────────────────────────────
+function saveSession(user) {
+  const data = { name: user.name, email: user.email, savedAt: Math.floor(Date.now() / 1000) };
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(data)); localStorage.setItem(SESSION_KEY, JSON.stringify(data)); } catch(e) {}
+}
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (!d.email || d.email.split('@')[1] !== ALLOWED_DOMAIN) return null;
+    if (Math.floor(Date.now() / 1000) - d.savedAt > 8 * 3600) return null; // 8-hour session
+    return d;
+  } catch(e) { return null; }
+}
+function clearSession() {
+  try { sessionStorage.removeItem(SESSION_KEY); localStorage.removeItem(SESSION_KEY); } catch(e) {}
+}
+
+// ── UI helpers ───────────────────────────────────────────────────
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.classList.add('visible');
+  document.getElementById('auth-loading').classList.remove('visible');
+  const btn = document.getElementById('google-signin-btn');
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg> Try Again`;
+}
+function setAuthLoading(on) {
+  document.getElementById('google-signin-btn').disabled = on;
+  const l = document.getElementById('auth-loading');
+  if (on) { l.classList.add('visible'); document.getElementById('auth-error').classList.remove('visible'); }
+  else l.classList.remove('visible');
+}
+
+// ── Grant access ─────────────────────────────────────────────────
+function grantAccess(user) {
+  const initials = (user.name || user.email).split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('user-initials').textContent   = initials;
+  document.getElementById('user-display-name').textContent = user.name || '';
+  document.getElementById('user-display-email').textContent = user.email || '';
+  document.getElementById('user-info-chip').style.display = 'flex';
+  document.getElementById('logout-btn').style.display    = 'flex';
+  const overlay = document.getElementById('auth-overlay');
+  overlay.classList.add('hidden');
+  setTimeout(() => { overlay.style.display = 'none'; }, 420);
+}
+
+// ── JWT decode (client-side claims only) ─────────────────────────
+function parseJwt(token) {
+  try {
+    const b = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    return JSON.parse(decodeURIComponent(atob(b).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+  } catch(e) { return null; }
+}
+
+// ── Credential callback from GIS ─────────────────────────────────
+function handleGoogleCredential(response) {
+  setAuthLoading(true);
+  const p = parseJwt(response.credential);
+  if (!p) { showAuthError('Authentication failed. Please try again.'); return; }
+  if (!p.email_verified) { showAuthError('Your Google email is not verified.'); return; }
+  const domain = (p.email || '').split('@')[1];
+  if (domain !== ALLOWED_DOMAIN) {
+    showAuthError('Access denied. Please sign in using your Alliance Global Solutions email address.');
+    return;
+  }
+  const user = { name: p.name || '', email: p.email || '' };
+  saveSession(user);
+  setAuthLoading(false);
+  grantAccess(user);
+}
+
+// ── Trigger sign-in ───────────────────────────────────────────────
+function initiateGoogleSignIn() {
+  document.getElementById('auth-error').classList.remove('visible');
+  if (typeof google === 'undefined' || !google.accounts) {
+    showAuthError('Google Sign-In is still loading. Please wait a moment and try again.');
+    return;
+  }
+  setAuthLoading(true);
+  google.accounts.id.prompt(n => {
+    if (n.isNotDisplayed() || n.isSkippedMoment()) {
+      // Fallback to OAuth popup
+      google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID, scope: 'email profile',
+        callback: r => {
+          if (r.error) { showAuthError('Sign-in cancelled or failed. Please try again.'); return; }
+          fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + r.access_token } })
+            .then(res => res.json()).then(info => {
+              const dom = (info.email || '').split('@')[1];
+              if (!info.email_verified) { showAuthError('Your Google email is not verified.'); return; }
+              if (dom !== ALLOWED_DOMAIN) { showAuthError('Access denied. Please sign in using your Alliance Global Solutions email address.'); return; }
+              const user = { name: info.name || '', email: info.email || '' };
+              saveSession(user); setAuthLoading(false); grantAccess(user);
+            }).catch(() => showAuthError('Failed to get account info. Please try again.'));
+        }
+      }).requestAccessToken({ prompt: 'select_account' });
+    }
+  });
+}
+
+// ── Sign out ──────────────────────────────────────────────────────
+function signOut() {
+  clearSession();
+  if (typeof google !== 'undefined' && google.accounts) google.accounts.id.disableAutoSelect();
+  window.location.reload();
+}
+
+// ── Init GIS library ─────────────────────────────────────────────
+function initGoogleAuth() {
+  if (typeof google === 'undefined' || !google.accounts) { setTimeout(initGoogleAuth, 300); return; }
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential,
+    auto_select: true, cancel_on_tap_outside: false, hd: ALLOWED_DOMAIN
+  });
+}
+
+// ── Bootstrap: restore session or show login ─────────────────────
+(function() {
+  const saved = loadSession();
+  if (saved) {
+    grantAccess(saved);
+    document.addEventListener('DOMContentLoaded', initGoogleAuth);
+    return;
+  }
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.addEventListener('DOMContentLoaded', initGoogleAuth);
+  window.onGoogleLibraryLoad = initGoogleAuth;
+})();
+</script>
 
 <script>
 // ── TIMEZONE: Display all dates/times in Eastern Standard Time ──
