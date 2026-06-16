@@ -879,10 +879,11 @@ function doGet(e) {
           <th onclick="sortBy('agent')" data-col="agent">Agent <span class="sort-arrow">↕</span></th>
           <th>Notes</th>
           <th>Disposition</th>
+          <th>Last Modified By</th>
         </tr>
       </thead>
       <tbody id="table-body">
-        <tr><td colspan="8"><div class="state-center"><div class="spinner"></div><p>Loading calls…</p></div></td></tr>
+        <tr><td colspan="9"><div class="state-center"><div class="spinner"></div><p>Loading calls…</p></div></td></tr>
       </tbody>
     </table>
   </div>
@@ -949,7 +950,10 @@ function setAuthLoading(on) {
 }
 
 // ── Grant access ─────────────────────────────────────────────────
+let currentUser = null;
+
 function grantAccess(user) {
+  currentUser = user;
   const initials = (user.name || user.email).split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
   document.getElementById('user-initials').textContent   = initials;
   document.getElementById('user-display-name').textContent = user.name || '';
@@ -1239,7 +1243,7 @@ async function loadData() {
 
   if (isFirstLoad) {
     setSyncState('syncing', 'Loading…');
-    tbody.innerHTML = `<tr><td colspan="8"><div class="state-center"><div class="spinner"></div><p>Fetching from Google Sheets…</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9"><div class="state-center"><div class="spinner"></div><p>Fetching from Google Sheets…</p></div></td></tr>`;
   } else {
     // background refresh: don't blank the table, just pulse the dot
     setSyncState('syncing', 'Syncing…');
@@ -1283,7 +1287,7 @@ async function loadData() {
   } catch(e) {
     if (isFirstLoad) {
       setSyncState('error', 'Error');
-      tbody.innerHTML = `<tr><td colspan="8"><div class="state-center">
+      tbody.innerHTML = `<tr><td colspan="9"><div class="state-center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <p style="color:var(--red);font-weight:600;">Failed to load: ${e.message}</p>
         <p style="font-size:12px;margin-top:8px;text-align:left;line-height:1.8;">
@@ -1498,7 +1502,7 @@ function renderTable() {
 
   const tbody = document.getElementById('table-body');
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="state-center">
+    tbody.innerHTML = `<tr><td colspan="9"><div class="state-center">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <p>No calls match your filters.</p>
     </div></td></tr>`;
@@ -1522,10 +1526,11 @@ function renderTable() {
       <td class="td-agent" title="${r.agent}">${shortAgent(r.agent)}</td>
       <td class="td-notes${!r.notes || !r.notes.trim() ? ' notes-missing' : ''}" title="${!r.notes || !r.notes.trim() ? '⚠ Notes required' : r.notes}">${!r.notes || !r.notes.trim() ? '<span class="notes-warn-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fill notes</span>' : r.notes}</td>
       <td class="disposition-cell">
-        <select class="disp-select ${r.disp ? 'has-value' : ''}" data-row="${r.rowNum}" onchange="saveDisp(this, ${r.rowNum})">
+        <select class="disp-select ${r.disp ? 'has-value' : ''}" data-row="${r.rowNum}" onchange="saveDisp(this, ${r.rowNum})" data-modifier="${r.modifier || ''}" >
           ${DISPOSITIONS.map(d => `<option value="${d}" ${d === r.disp ? 'selected' : ''}>${d || '— Select disposition —'}</option>`).join('')}
         </select>
       </td>
+      <td class="td-modifier" style="font-size:12px;color:var(--text-muted);text-align:center;font-family:var(--mono);">${r.modifier || ''}</td>
     </tr>
   `).join('');
 }
@@ -1607,7 +1612,13 @@ async function saveDisp(select, rowNum) {
   select.classList.add('saving');
   // update local state
   const row = allRows.find(r => r.rowNum === rowNum);
-  if (row) row.disp = value;
+  const modifierInitials = currentUser
+    ? (currentUser.name || currentUser.email).split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : '';
+  if (row) { row.disp = value; row.modifier = modifierInitials; }
+  // update Last Modified By cell in the DOM
+  const modCell = select.closest('tr')?.querySelector('.td-modifier');
+  if (modCell) modCell.textContent = modifierInitials;
 
   if (!config.scriptUrl) {
     showToast('⚠ No Apps Script URL configured — disposition saved locally only. Add the URL in Settings to write to the sheet.', 'error');
