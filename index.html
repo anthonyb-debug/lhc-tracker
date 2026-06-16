@@ -101,7 +101,7 @@
   .header-right { display: flex; align-items: center; gap: 8px; }
   .sync-status {
     display: flex; align-items: center; gap: 6px;
-    font-size: 12px; color: rgba(255,255,255,0.85);
+    color: rgba(255,255,255,0.85);
     padding: 3px 8px;
     background: rgba(255,255,255,0.15);
     border-radius: 20px;
@@ -707,7 +707,7 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Dashboard
     </button>
-    <button id="settings-btn" onclick="showConfig()" style="display:none;">
+    <button class="btn-secondary" id="settings-btn" onclick="showConfig()" style="display:none;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
     </button>
@@ -784,7 +784,7 @@
 </div>
 
 <!-- Apps Script Help Modal -->
-<div id="script-help" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+<div id="script-help" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:540px;width:90%;max-height:80vh;overflow-y:auto;">
     <h3 style="margin-bottom:14px;font-size:16px;">Setting Up the Apps Script Web App</h3>
     <p style="color:var(--text-muted);font-size:13px;line-height:1.7;margin-bottom:14px;">This script acts as a bridge so the app can write disposition values back to your Google Sheet.</p>
@@ -1039,11 +1039,19 @@ function initGoogleAuth() {
   const saved = loadSession();
   if (saved) {
     grantAccess(saved);
-    document.addEventListener('DOMContentLoaded', initGoogleAuth);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGoogleAuth);
+    } else {
+      initGoogleAuth();
+    }
     return;
   }
   document.getElementById('auth-overlay').style.display = 'flex';
-  document.addEventListener('DOMContentLoaded', initGoogleAuth);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGoogleAuth);
+  } else {
+    initGoogleAuth();
+  }
   window.onGoogleLibraryLoad = initGoogleAuth;
 })();
 </script>
@@ -1205,6 +1213,9 @@ function showConfig() {
   document.getElementById('app').style.display = 'none';
   document.getElementById('settings-btn').style.display = 'none';
   document.getElementById('refresh-btn').style.display = 'none';
+  document.getElementById('csv-btn').style.display = 'none';
+  document.getElementById('guide-btn').style.display = 'none';
+  document.getElementById('dashboard-btn').style.display = 'none';
 }
 
 function showApp() {
@@ -1242,7 +1253,7 @@ async function loadData() {
 
   if (isFirstLoad) {
     setSyncState('syncing', 'Loading…');
-    tbody.innerHTML = `<tr><td colspan="9"><div class="state-center"><div class="spinner"></div><p>Fetching from Google Sheets…</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="state-center"><div class="spinner"></div><p>Fetching from Google Sheets…</p></div></td></tr>`;
   } else {
     // background refresh: don't blank the table, just pulse the dot
     setSyncState('syncing', 'Syncing…');
@@ -1372,12 +1383,12 @@ function mergeAndUpdate(newRows) {
 function updateRowCells(tr, r) {
   const cells = tr.children;
   cells[0].textContent = r.rowNum;
-  cells[1].innerHTML = `<div class="td-phone-wrap"><span>${r.phone}</span><button class="copy-btn" onclick="copyPhone(this,'${r.phone}')" title="Copy number"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
+  cells[1].innerHTML = `<div class="td-phone-wrap"><span>${r.phone}</span><button class="copy-btn" data-phone="${r.phone}" onclick="copyPhone(this)" title="Copy number"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
   cells[2].innerHTML = statusBadge(r.status);
   cells[3].textContent = r.date;
   cells[4].textContent = r.time;
   cells[5].textContent = shortAgent(r.agent);
-  cells[5].title = r.agent;
+  cells[5].title = escAttr(r.agent);
   const missingNotes = !r.notes || !r.notes.trim();
   cells[6].classList.toggle('notes-missing', missingNotes);
   cells[6].title = missingNotes ? '⚠ Notes required' : r.notes;
@@ -1460,7 +1471,7 @@ function getFilteredSortedRows() {
   const dateTo   = document.getElementById('filter-date-to').value;
 
   let rows = allRows.filter(r => {
-    if (filterStatus && r.status.toLowerCase() !== filterStatus) return false;
+    if (filterStatus && !r.status.toLowerCase().trim().includes(filterStatus)) return false;
     if (filterAgent && r.agent !== filterAgent) return false;
     if (filterDisp === '__empty__' && r.disp.trim() !== '') return false;
     if (filterDisp && filterDisp !== '__empty__' && r.disp !== filterDisp) return false;
@@ -1488,12 +1499,16 @@ function getFilteredSortedRows() {
       // same date — break tie by time (parse back to ms for correct AM/PM ordering)
       const ta = parseTimeToMs(a.time);
       const tb = parseTimeToMs(b.time);
-      return (ta - tb) * -sortDir;
+      return (ta - tb) * sortDir;
     }
     return String(va).localeCompare(String(vb)) * sortDir;
   });
 
   return rows;
+}
+
+function escAttr(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function renderTable() {
@@ -1525,7 +1540,7 @@ function renderTable() {
       <td class="td-phone">
         <div class="td-phone-wrap">
           <span>${r.phone}</span>
-          <button class="copy-btn" onclick="copyPhone(this, '${r.phone}')" title="Copy number">
+          <button class="copy-btn" data-phone="${r.phone}" onclick="copyPhone(this)" title="Copy number">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
         </div>
@@ -1533,8 +1548,8 @@ function renderTable() {
       <td>${statusBadge(r.status)}</td>
       <td class="td-date">${r.date}</td>
       <td class="td-time">${r.time}</td>
-      <td class="td-agent" title="${r.agent}">${shortAgent(r.agent)}</td>
-      <td class="td-notes${!r.notes || !r.notes.trim() ? ' notes-missing' : ''}" title="${!r.notes || !r.notes.trim() ? '⚠ Notes required' : r.notes}">${!r.notes || !r.notes.trim() ? '<span class="notes-warn-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fill notes</span>' : r.notes}</td>
+      <td class="td-agent" title="${escAttr(r.agent)}">${shortAgent(r.agent)}</td>
+      <td class="td-notes${!r.notes || !r.notes.trim() ? ' notes-missing' : ''}" title="${!r.notes || !r.notes.trim() ? '⚠ Notes required' : escAttr(r.notes)}">${!r.notes || !r.notes.trim() ? '<span class="notes-warn-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fill notes</span>' : escAttr(r.notes)}</td>
       <td class="disposition-cell">
         <select class="disp-select ${r.disp ? 'has-value' : ''}" data-row="${r.rowNum}" onchange="saveDisp(this, ${r.rowNum})" data-modifier="${r.modifier || ''}" >
           ${DISPOSITIONS.map(d => `<option value="${d}" ${d === r.disp ? 'selected' : ''}>${d || '— Select disposition —'}</option>`).join('')}
@@ -1750,10 +1765,10 @@ function downloadCSV() {
   rows = [...rows].sort((a,b) => a.rowNum - b.rowNum);
 
   const escape = v => `"${String(v||'').replace(/"/g,'""')}"`;
-  const header = ['Date','Time','Phone','Status','Agent','Disposition'];
+  const header = ['Date','Time','Phone','Status','Agent','Notes','Disposition'];
   const lines  = [header.join(',')];
   rows.forEach(r => {
-    lines.push([r.date, r.time, r.phone, r.status, r.agent, r.disp].map(escape).join(','));
+    lines.push([r.date, r.time, r.phone, r.status, r.agent, r.notes, r.disp].map(escape).join(','));
   });
 
   const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
@@ -1768,7 +1783,8 @@ function downloadCSV() {
 }
 
 // ── COPY PHONE ──
-function copyPhone(btn, phone) {
+function copyPhone(btn) {
+  const phone = btn.dataset.phone || '';
   navigator.clipboard.writeText(phone).then(() => {
     btn.classList.add('copied');
     btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -1836,18 +1852,17 @@ function renderDashboard() {
     byDate[d][a].total++;
     // Categorise call type by status or disposition
     const disp  = (r.disp  || '').toLowerCase();
-    const status = (r.status || '').toLowerCase();
+    const status = (r.status || '').toLowerCase().trim();
     if (status.includes('answered') || status.includes('inbound') || status.includes('completed')) {
       byDate[d][a].answered++;
-    } else if (status.includes('no answer') || status.includes('missed') || status.includes('voicemail') || disp.includes('hung up') || disp.includes('dead air')) {
+    } else if (disp.includes('hung') || disp.includes('dead air') || disp.includes('automated') ||
+               status.includes('voicemail')) {
       byDate[d][a].hungup++;
-    } else if (status.includes('no-answer') || status.includes('no answer') || disp.includes('missed call')) {
+    } else if (status.includes('no answer') || status.includes('no-answer') || status.includes('missed') ||
+               disp.includes('missed call') || disp === '') {
       byDate[d][a].noanswer++;
     } else {
-      // fallback: bucket by disposition keyword
-      if (disp.includes('hung') || disp.includes('dead air') || disp.includes('automated')) byDate[d][a].hungup++;
-      else if (disp.includes('missed') || disp === '') byDate[d][a].noanswer++;
-      else byDate[d][a].answered++;
+      byDate[d][a].answered++;
     }
     if (r.disp) byDate[d][a].done++;
     else byDate[d][a].pending++;
@@ -1921,7 +1936,7 @@ function renderDashboard() {
         <button class="btn-secondary" onclick="clearCsvDates()" style="padding:6px 10px;font-size:11px;">Clear</button>
       </div>
       <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;">
-        Leave dates blank to export all records. Columns: Date, Time, Phone, Status, Agent, Disposition.
+        Leave dates blank to export all records. Columns: Date, Time, Phone, Status, Agent, Notes, Disposition.
       </p>
       <button onclick="downloadCSV()" style="background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
