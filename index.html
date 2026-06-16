@@ -800,10 +800,14 @@
     var params = JSON.parse(e.postData.contents);
     var sheet = SpreadsheetApp.getActiveSpreadsheet()
                   .getSheetByName(params.sheetName || "Sheet1");
-    var row = params.row;     // row number (1-based)
-    var col = params.col;     // column number (7 = G)
+    var row = params.row;          // row number (1-based)
+    var col = params.col;          // column number (7 = G = Disposition)
     var val = params.value;
     sheet.getRange(row, col).setValue(val);
+    // Write modifier initials to column I (col 9)
+    if (params.modifier !== undefined && params.modifierCol) {
+      sheet.getRange(row, params.modifierCol).setValue(params.modifier);
+    }
     return ContentService
       .createTextOutput(JSON.stringify({success: true}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -1249,7 +1253,7 @@ async function loadData() {
     setSyncState('syncing', 'Syncing…');
   }
 
-  const range = encodeURIComponent(`${config.sheetName}!A:G`);
+  const range = encodeURIComponent(`${config.sheetName}!A:I`);
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.sheetId}/values/${range}?key=${config.apiKey}`;
   try {
     const res = await fetch(url);
@@ -1269,16 +1273,14 @@ async function loadData() {
       time:   r[3] || '',
       agent:  r[4] || '',
       notes:  r[5] || '',
-      disp:   r[6] || '',
+      disp:     r[6] || '',
+      colH:     r[7] || '',
+      modifier: r[8] || '',
     }));
 
     if (isFirstLoad) {
       allRows = newRows;
-      // restore any previously saved modifiers
-      try {
-        const mods = JSON.parse(localStorage.getItem('ags_modifiers') || '{}');
-        allRows.forEach(r => { if (mods[r.rowNum]) r.modifier = mods[r.rowNum]; });
-      } catch(e) {}
+      // modifiers are now read directly from column I of the sheet
       populateAgentFilter();
       renderTable();
     } else {
@@ -1317,11 +1319,7 @@ async function loadData() {
 function mergeAndUpdate(newRows) {
   const oldMap = new Map(allRows.map(r => [r.rowNum, r]));
 
-  // carry over modifier initials from old rows so they survive auto-refresh
-  newRows.forEach(nr => {
-    const or = oldMap.get(nr.rowNum);
-    if (or && or.modifier) nr.modifier = or.modifier;
-  });
+  // modifiers come from column I of the sheet — no local carry-over needed
   const newMap = new Map(newRows.map(r => [r.rowNum, r]));
 
   // did the set of rows change (added/removed)?
@@ -1627,12 +1625,7 @@ async function saveDisp(select, rowNum) {
     ? (currentUser.name || currentUser.email).split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : '';
   if (row) { row.disp = value; row.modifier = modifierInitials; }
-  // persist modifiers so they survive page reload
-  try {
-    const mods = JSON.parse(localStorage.getItem('ags_modifiers') || '{}');
-    mods[rowNum] = modifierInitials;
-    localStorage.setItem('ags_modifiers', JSON.stringify(mods));
-  } catch(e) {}
+  // modifier is now written to column I of the sheet (handled in the fetch below)
   // update Last Modified By cell in the DOM
   const modCell = select.closest('tr')?.querySelector('.td-modifier');
   if (modCell) modCell.textContent = modifierInitials;
@@ -1650,7 +1643,7 @@ async function saveDisp(select, rowNum) {
       method: 'POST',
       mode: 'no-cors', // Apps Script requires no-cors
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ row: rowNum, col: 7, value, sheetName: config.sheetName })
+      body: JSON.stringify({ row: rowNum, col: 7, value, modifier: modifierInitials, modifierCol: 9, sheetName: config.sheetName })
     });
     // no-cors means we can't read the response, but if no error was thrown it worked
     select.classList.remove('saving');
