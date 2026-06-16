@@ -1274,6 +1274,11 @@ async function loadData() {
 
     if (isFirstLoad) {
       allRows = newRows;
+      // restore any previously saved modifiers
+      try {
+        const mods = JSON.parse(localStorage.getItem('ags_modifiers') || '{}');
+        allRows.forEach(r => { if (mods[r.rowNum]) r.modifier = mods[r.rowNum]; });
+      } catch(e) {}
       populateAgentFilter();
       renderTable();
     } else {
@@ -1311,6 +1316,12 @@ async function loadData() {
 // ── MERGE NEW DATA WITHOUT BLANKING THE TABLE ──
 function mergeAndUpdate(newRows) {
   const oldMap = new Map(allRows.map(r => [r.rowNum, r]));
+
+  // carry over modifier initials from old rows so they survive auto-refresh
+  newRows.forEach(nr => {
+    const or = oldMap.get(nr.rowNum);
+    if (or && or.modifier) nr.modifier = or.modifier;
+  });
   const newMap = new Map(newRows.map(r => [r.rowNum, r]));
 
   // did the set of rows change (added/removed)?
@@ -1616,6 +1627,12 @@ async function saveDisp(select, rowNum) {
     ? (currentUser.name || currentUser.email).split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : '';
   if (row) { row.disp = value; row.modifier = modifierInitials; }
+  // persist modifiers so they survive page reload
+  try {
+    const mods = JSON.parse(localStorage.getItem('ags_modifiers') || '{}');
+    mods[rowNum] = modifierInitials;
+    localStorage.setItem('ags_modifiers', JSON.stringify(mods));
+  } catch(e) {}
   // update Last Modified By cell in the DOM
   const modCell = select.closest('tr')?.querySelector('.td-modifier');
   if (modCell) modCell.textContent = modifierInitials;
