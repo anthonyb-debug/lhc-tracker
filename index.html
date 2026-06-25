@@ -439,6 +439,69 @@
     background: var(--surface);
   }
 
+  /* ── PAGINATION ── */
+  .pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pagination-info {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .pagination-info strong { color: var(--text-1); font-weight: 700; }
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pg-btn {
+    min-width: 32px;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pg-btn:hover:not(:disabled) { background: var(--border); color: var(--text-1); }
+  .pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .pg-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .pg-ellipsis { font-size: 12px; color: var(--text-dim); padding: 0 4px; }
+  .pg-size-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .pg-size-select {
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-1);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
   table { width: 100%; border-collapse: collapse; }
 
   thead tr {
@@ -937,10 +1000,6 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Dashboard
     </button>
-    <button class="btn-secondary" id="settings-btn" onclick="showConfig()" style="display:none;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-    </button>
     <button class="btn-secondary" id="refresh-btn" onclick="manualRefresh()" style="display:none;" title="Click to refresh now">
       <svg width="13" height="13" id="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       <span id="refresh-countdown">5s</span>
@@ -1062,16 +1121,16 @@ function doGet(e) {
       <button class="search-clear-btn" id="search-clear-btn" onclick="clearSearch()" title="Clear search">✕</button>
     </div>
     <div class="toolbar-sep"></div>
-    <select class="filter-select" id="filter-status" onchange="renderTable()">
+    <select class="filter-select" id="filter-status" onchange="currentPage=1;renderTable()">
       <option value="">All Statuses</option>
       <option value="hangup">Hangup</option>
       <option value="answered">Answered</option>
       <option value="no answer">No Answer</option>
     </select>
-    <select class="filter-select" id="filter-agent" onchange="renderTable()">
+    <select class="filter-select" id="filter-agent" onchange="currentPage=1;renderTable()">
       <option value="">All Agents</option>
     </select>
-    <select class="filter-select" id="filter-disp" onchange="renderTable()">
+    <select class="filter-select" id="filter-disp" onchange="currentPage=1;renderTable()">
       <option value="">All Dispositions</option>
       <option value="__empty__">— Not yet set —</option>
     </select>
@@ -1117,6 +1176,19 @@ function doGet(e) {
         <tr><td colspan="8"><div class="state-center"><div class="spinner"></div><p>Loading calls…</p></div></td></tr>
       </tbody>
     </table>
+    <div class="pagination-bar" id="pagination-bar" style="display:none;">
+      <div class="pagination-info" id="pagination-info"></div>
+      <div class="pagination-controls" id="pagination-controls"></div>
+      <div class="pg-size-wrap">
+        Rows per page:
+        <select class="pg-size-select" id="pg-size-select" onchange="onPageSizeChange()">
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="500">500</option>
+        </select>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1339,6 +1411,8 @@ let refreshTimer = null;
 let dispDropdownOpen = false; // true while any disp select is open
 let backoffLevel = 0; // 0=60s, 1=120s, 2=300s after repeated errors
 const BACKOFF_INTERVALS = [60000, 120000, 300000]; // ms
+let currentPage = 1;
+let pageSize = 50;
 
 // ── PRE-CONFIGURED CREDENTIALS (set these before deploying) ──
 // Fill in your values below — agents will skip setup and go straight to the board.
@@ -1443,7 +1517,8 @@ function connect() {
 function showConfig() {
   document.getElementById('config-panel').style.display = 'block';
   document.getElementById('app').style.display = 'none';
-  document.getElementById('settings-btn').style.display = 'none';
+  // settings-btn hidden intentionally — agents should not access config
+  // document.getElementById('settings-btn').style.display = 'none';
   document.getElementById('refresh-btn').style.display = 'none';
   document.getElementById('csv-btn').style.display = 'none';
   document.getElementById('guide-btn').style.display = 'none';
@@ -1453,7 +1528,7 @@ function showConfig() {
 function showApp() {
   document.getElementById('config-panel').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('settings-btn').style.display = 'flex';
+  // document.getElementById('settings-btn').style.display = 'flex';
   document.getElementById('refresh-btn').style.display = 'flex';
   document.getElementById('csv-btn').style.display = 'flex';
   document.getElementById('guide-btn').style.display = 'flex';
@@ -1683,6 +1758,7 @@ function onDateChange() {
   const to   = document.getElementById('filter-date-to').value;
   const btn  = document.getElementById('date-clear-btn');
   btn.classList.toggle('visible', !!(from || to));
+  currentPage = 1;
   renderTable();
 }
 
@@ -1690,6 +1766,7 @@ function clearDateFilter() {
   document.getElementById('filter-date-from').value = '';
   document.getElementById('filter-date-to').value = '';
   document.getElementById('date-clear-btn').classList.remove('visible');
+  currentPage = 1;
   renderTable();
 }
 
@@ -1758,15 +1835,27 @@ function renderTable() {
   updateStats(rows);
 
   const tbody = document.getElementById('table-body');
+  const paginationBar = document.getElementById('pagination-bar');
+
   if (rows.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8"><div class="state-center">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <p>No calls match your filters.</p>
     </div></td></tr>`;
+    paginationBar.style.display = 'none';
     return;
   }
 
-  tbody.innerHTML = rows.map(r => `
+  // Clamp currentPage to valid range
+  const totalPages = Math.ceil(rows.length / pageSize);
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const start = (currentPage - 1) * pageSize;
+  const end = Math.min(start + pageSize, rows.length);
+  const pageRows = rows.slice(start, end);
+
+  tbody.innerHTML = pageRows.map(r => `
     <tr data-rownum="${r.rowNum}" class="${!r.disp ? 'row-no-disp' : ''}">
       <td class="td-row-num">${r.rowNum}</td>
       <td class="td-phone">
@@ -1789,23 +1878,78 @@ function renderTable() {
       </td>
     </tr>
   `).join('');
+
+  // Update pagination bar
+  paginationBar.style.display = 'flex';
+  const from = start + 1;
+  const to = end;
+  document.getElementById('pagination-info').innerHTML =
+    `Showing <strong>${from}–${to}</strong> of <strong>${rows.length}</strong> calls`;
+
+  renderPaginationControls(totalPages);
+}
+
+function renderPaginationControls(totalPages) {
+  const ctrl = document.getElementById('pagination-controls');
+  if (totalPages <= 1) { ctrl.innerHTML = ''; return; }
+
+  const pages = [];
+
+  // Always show first, last, current ±1, with ellipsis gaps
+  const show = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]
+    .filter(p => p >= 1 && p <= totalPages));
+  const sorted = [...show].sort((a, b) => a - b);
+
+  let html = '';
+  // Prev button
+  html += `<button class="pg-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+
+  let prev = 0;
+  for (const p of sorted) {
+    if (p - prev > 1) html += `<span class="pg-ellipsis">…</span>`;
+    html += `<button class="pg-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+    prev = p;
+  }
+
+  // Next button
+  html += `<button class="pg-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+
+  ctrl.innerHTML = html;
+}
+
+function goToPage(p) {
+  const rows = getFilteredSortedRows();
+  const totalPages = Math.ceil(rows.length / pageSize);
+  currentPage = Math.max(1, Math.min(p, totalPages));
+  renderTable();
+  // Scroll table into view smoothly
+  document.querySelector('.table-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function onPageSizeChange() {
+  pageSize = parseInt(document.getElementById('pg-size-select').value);
+  currentPage = 1;
+  renderTable();
 }
 
 function onSearchInput() {
   const val = document.getElementById('search-input').value;
   document.getElementById('search-clear-btn').classList.toggle('visible', val.length > 0);
+  currentPage = 1;
   renderTable();
 }
 
 function clearSearch() {
   document.getElementById('search-input').value = '';
   document.getElementById('search-clear-btn').classList.remove('visible');
+  currentPage = 1;
   renderTable();
 }
 
 function sortBy(col) {
   if (sortCol === col) sortDir *= -1;
   else { sortCol = col; sortDir = 1; }
+  currentPage = 1;
   renderTable();
 }
 
@@ -1915,7 +2059,7 @@ async function saveDisp(select, rowNum) {
   if (modCell) modCell.textContent = modifierInitials;
 
   if (!config.scriptUrl) {
-    showToast('⚠ No Apps Script URL configured — disposition saved locally only. Add the URL in Settings to write to the sheet.', 'error');
+    showToast('⚠ No Apps Script URL configured — disposition saved locally only.', 'error');
     select.classList.remove('saving');
     select.classList.toggle('has-value', !!value);
     return;
@@ -2083,26 +2227,30 @@ function closeModal(id) {
 }
 
 function populateDashFilters() {
-  const dateSelect = document.getElementById('dash-date-select');
-  const dates = [...new Set(allRows.map(r => r.date).filter(Boolean))].sort((a,b) => {
-    const da = parseRowDate(a) || ''; const db = parseRowDate(b) || '';
-    return da < db ? 1 : da > db ? -1 : 0;
-  });
-  dateSelect.innerHTML = '<option value="all">All dates</option>' +
-    dates.map(d => `<option value="${d}">${d}</option>`).join('');
-
   const agentSelect = document.getElementById('dash-agent-select');
   const agents = [...new Set(allRows.map(r => r.agent).filter(Boolean))].sort();
   agentSelect.innerHTML = '<option value="all">All agents</option>' +
     agents.map(a => `<option value="${a}">${a}</option>`).join('');
 }
 
+function clearDashDate() {
+  document.getElementById('dash-date-input').value = '';
+  renderDashboard();
+}
+
 function renderDashboard() {
-  const dateFilter  = document.getElementById('dash-date-select').value;
+  const dateInput  = document.getElementById('dash-date-input').value; // "YYYY-MM-DD" or ""
   const agentFilter = document.getElementById('dash-agent-select').value;
 
+  // Convert YYYY-MM-DD to the format used in allRows (M/D/YYYY)
+  let dateFilterStr = '';
+  if (dateInput) {
+    const [y, m, d] = dateInput.split('-');
+    dateFilterStr = `${parseInt(m)}/${parseInt(d)}/${y}`;
+  }
+
   const rows = allRows.filter(r => {
-    if (dateFilter  !== 'all' && r.date  !== dateFilter)  return false;
+    if (dateFilterStr && r.date !== dateFilterStr) return false;
     if (agentFilter !== 'all' && r.agent !== agentFilter) return false;
     return true;
   });
@@ -2114,7 +2262,6 @@ function renderDashboard() {
     const a = r.agent || 'Unknown';
     if (!byDate[d][a]) byDate[d][a] = { total: 0, answered: 0, hungup: 0, noanswer: 0, done: 0, pending: 0 };
     byDate[d][a].total++;
-    // Categorise call type by status or disposition
     const disp  = (r.disp  || '').toLowerCase();
     const status = (r.status || '').toLowerCase().trim();
     if (status.includes('answered') || status.includes('inbound') || status.includes('completed')) {
@@ -2143,17 +2290,16 @@ function renderDashboard() {
   } else {
     sortedDates.forEach(date => {
       const agents = Object.entries(byDate[date]).sort((a,b) => b[1].total - a[1].total);
-      const dayTotal = agents.reduce((s,[,v]) => s + v.total, 0);
-      const dayDone  = agents.reduce((s,[,v]) => s + v.done, 0);
       html += `<div class="dash-date-group">
-        <div class="dash-date-label">${date} &mdash; ${dayTotal} calls &nbsp;|&nbsp; <span style="color:var(--green)">${agents.reduce((s,[,v])=>s+v.answered,0)} answered</span> &nbsp;|&nbsp; <span style="color:var(--red)">${agents.reduce((s,[,v])=>s+v.hungup,0)} hung up</span> &nbsp;|&nbsp; <span style="color:var(--text-muted)">${agents.reduce((s,[,v])=>s+v.noanswer,0)} no answer</span></div>
+        <div class="dash-date-label">${date} &mdash; ${agents.reduce((s,[,v])=>s+v.total,0)} calls &nbsp;|&nbsp; <span style="color:var(--green)">${agents.reduce((s,[,v])=>s+v.answered,0)} answered</span> &nbsp;|&nbsp; <span style="color:var(--red)">${agents.reduce((s,[,v])=>s+v.hungup,0)} hung up</span> &nbsp;|&nbsp; <span style="color:var(--text-muted)">${agents.reduce((s,[,v])=>s+v.noanswer,0)} no answer</span></div>
+        <div style="overflow-x:auto;">
         <table class="dash-table">
           <thead><tr>
             <th>Agent</th>
             <th class="num">Total</th>
-            <th class="num" style="color:var(--green)">Answered</th>
-            <th class="num" style="color:var(--red)">Hung Up</th>
-            <th class="num" style="color:var(--text-muted)">No Answer</th>
+            <th class="num">Answered</th>
+            <th class="num">Hung Up</th>
+            <th class="num">No Answer</th>
             <th class="num">Dispositioned</th>
             <th class="num">Pending</th>
             <th class="num">Completion %</th>
@@ -2172,7 +2318,7 @@ function renderDashboard() {
           <td class="num"><span class="dash-pct ${cls}">${pct}%</span></td>
         </tr>`;
       });
-      html += '</tbody></table></div>';
+      html += '</tbody></table></div></div>';
     });
   }
   document.getElementById('dashboard-content').innerHTML = html;
@@ -2245,7 +2391,7 @@ function renderDashboard() {
 
 <!-- DASHBOARD MODAL -->
 <div class="modal-overlay" id="dashboard-modal" onclick="closeModal('dashboard-modal')">
-  <div class="modal-box" onclick="event.stopPropagation()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:1100px;width:96%;">
     <div class="modal-header">
       <span>📊 Agent Dashboard</span>
       <button class="modal-close" onclick="closeModal('dashboard-modal')">✕</button>
@@ -2253,9 +2399,8 @@ function renderDashboard() {
     <div class="modal-body">
       <div class="dash-filter-row">
         <label>Filter by date:</label>
-        <select id="dash-date-select" onchange="renderDashboard()">
-          <option value="all">All dates</option>
-        </select>
+        <input type="date" id="dash-date-input" onchange="renderDashboard()" style="padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;"/>
+        <button onclick="clearDashDate()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text-dim);cursor:pointer;font-family:inherit;">Clear</button>
         <label style="margin-left:10px;">Filter by agent:</label>
         <select id="dash-agent-select" onchange="renderDashboard()">
           <option value="all">All agents</option>
