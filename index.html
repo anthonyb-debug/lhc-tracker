@@ -380,6 +380,12 @@
   }
   .stat-chip:last-child { border-right: none; }
   .stat-chip:hover { background: var(--surface2); }
+  .stat-chip.clickable { cursor: pointer; }
+  .stat-chip.active {
+    background: var(--yellow-dim);
+    border-right-color: rgba(245,166,35,0.25);
+  }
+  .stat-chip.active .stat-label { color: var(--yellow); }
   .stat-chip .stat-val {
     font-size: 18px;
     font-weight: 700;
@@ -600,6 +606,50 @@
 
   /* ── disposition dropdown ── */
   .disposition-cell { min-width: 175px; }
+
+  /* ── row checkbox ── */
+  .td-check { width: 32px; padding: 9px 6px 9px 12px; }
+  .row-cb { width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent); }
+  th.th-check { width: 32px; padding: 9px 6px 9px 12px; }
+
+  /* ── bulk action bar ── */
+  .bulk-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(91,141,238,0.25);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .bulk-bar.visible { display: flex; }
+  .bulk-count { font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+  .bulk-select {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text); font-size: 12px;
+    font-family: var(--font); padding: 5px 24px 5px 8px; outline: none;
+    cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236b7491' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 7px center;
+    min-width: 180px;
+  }
+  .bulk-apply {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: 5px 12px;
+    font-size: 12px; font-weight: 600; font-family: var(--font);
+    cursor: pointer; transition: opacity .15s;
+  }
+  .bulk-apply:hover { opacity: .85; }
+  .bulk-apply:disabled { opacity: .45; cursor: not-allowed; }
+  .bulk-clear {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 11px; cursor: pointer; font-family: var(--font);
+    padding: 4px 6px; border-radius: var(--radius-sm); transition: color .15s;
+  }
+  .bulk-clear:hover { color: var(--red); }
   .disp-select {
     width: 100%;
     background: var(--surface2);
@@ -1130,7 +1180,7 @@ function doGet(e) {
     <select class="filter-select" id="filter-agent" onchange="currentPage=1;renderTable()">
       <option value="">All Agents</option>
     </select>
-    <select class="filter-select" id="filter-disp" onchange="currentPage=1;renderTable()">
+    <select class="filter-select" id="filter-disp" onchange="currentPage=1;syncPendingChip();renderTable()">
       <option value="">All Dispositions</option>
       <option value="__empty__">— Not yet set —</option>
     </select>
@@ -1158,10 +1208,20 @@ function doGet(e) {
   </div>
   <div class="stats-row" id="stats-row"></div>
 
+  <div class="bulk-bar" id="bulk-bar">
+    <span class="bulk-count" id="bulk-count">0 selected</span>
+    <select class="bulk-select" id="bulk-disp-select">
+      <option value="">— Set disposition —</option>
+    </select>
+    <button class="bulk-apply" id="bulk-apply-btn" onclick="applyBulkDisp()">Apply to selected</button>
+    <button class="bulk-clear" onclick="clearBulkSelection()">✕ Clear selection</button>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
+          <th class="th-check"><input type="checkbox" class="row-cb" id="select-all-cb" title="Select all on this page" onchange="toggleSelectAll(this)"></th>
           <th onclick="sortBy('rowNum')" data-col="rowNum"># <span class="sort-arrow">↕</span></th>
           <th onclick="sortBy('phone')" data-col="phone">Phone <span class="sort-arrow">↕</span></th>
           <th onclick="sortBy('status')" data-col="status">Status <span class="sort-arrow">↕</span></th>
@@ -1173,7 +1233,7 @@ function doGet(e) {
         </tr>
       </thead>
       <tbody id="table-body">
-        <tr><td colspan="8"><div class="state-center"><div class="spinner"></div><p>Loading calls…</p></div></td></tr>
+        <tr><td colspan="9"><div class="state-center"><div class="spinner"></div><p>Loading calls…</p></div></td></tr>
       </tbody>
     </table>
     <div class="pagination-bar" id="pagination-bar" style="display:none;">
@@ -1560,7 +1620,7 @@ async function loadData() {
 
   if (isFirstLoad) {
     setSyncState('syncing', 'Loading…');
-    tbody.innerHTML = `<tr><td colspan="8"><div class="state-center"><div class="spinner"></div><p>Fetching from Google Sheets…</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9"><div class="state-center"><div class="spinner"></div><p>Fetching from Google Sheets…</p></div></td></tr>`;
   } else {
     // background refresh: don't blank the table, just pulse the dot
     setSyncState('syncing', 'Syncing…');
@@ -1609,7 +1669,7 @@ async function loadData() {
   } catch(e) {
     if (isFirstLoad) {
       setSyncState('error', 'Error');
-      tbody.innerHTML = `<tr><td colspan="8"><div class="state-center">
+      tbody.innerHTML = `<tr><td colspan="9"><div class="state-center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <p style="color:var(--red);font-weight:600;">Failed to load: ${e.message}</p>
         <p style="font-size:12px;margin-top:8px;text-align:left;line-height:1.8;">
@@ -1838,7 +1898,7 @@ function renderTable() {
   const paginationBar = document.getElementById('pagination-bar');
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="state-center">
+    tbody.innerHTML = `<tr><td colspan="9"><div class="state-center">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <p>No calls match your filters.</p>
     </div></td></tr>`;
@@ -1851,12 +1911,18 @@ function renderTable() {
   if (currentPage > totalPages) currentPage = totalPages;
   if (currentPage < 1) currentPage = 1;
 
+  // Remove rows from selectedRows that no longer exist in filtered set
+  const filteredNums = new Set(rows.map(r => r.rowNum));
+  for (const rn of selectedRows) { if (!filteredNums.has(rn)) selectedRows.delete(rn); }
+  updateBulkBar();
+
   const start = (currentPage - 1) * pageSize;
   const end = Math.min(start + pageSize, rows.length);
   const pageRows = rows.slice(start, end);
 
   tbody.innerHTML = pageRows.map(r => `
     <tr data-rownum="${r.rowNum}" class="${!r.disp ? 'row-no-disp' : ''}">
+      <td class="td-check"><input type="checkbox" class="row-cb" data-rownum="${r.rowNum}" onchange="onRowCheckChange()" ${selectedRows.has(r.rowNum) ? 'checked' : ''}></td>
       <td class="td-row-num">${r.rowNum}</td>
       <td class="td-phone">
         <div class="td-phone-wrap">
@@ -1932,9 +1998,31 @@ function onPageSizeChange() {
   renderTable();
 }
 
+let _searchDebounce = null;
 function onSearchInput() {
   const val = document.getElementById('search-input').value;
   document.getElementById('search-clear-btn').classList.toggle('visible', val.length > 0);
+  clearTimeout(_searchDebounce);
+  _searchDebounce = setTimeout(() => { currentPage = 1; renderTable(); }, 150);
+}
+
+function syncPendingChip() {
+  const chip = document.getElementById('chip-pending');
+  if (!chip) return;
+  const active = document.getElementById('filter-disp').value === '__empty__';
+  chip.classList.toggle('active', active);
+}
+
+function togglePendingFilter() {
+  const sel = document.getElementById('filter-disp');
+  const chip = document.getElementById('chip-pending');
+  if (sel.value === '__empty__') {
+    sel.value = '';
+    chip.classList.remove('active');
+  } else {
+    sel.value = '__empty__';
+    chip.classList.add('active');
+  }
   currentPage = 1;
   renderTable();
 }
@@ -1974,68 +2062,183 @@ function populateAgentFilter() {
   if (agents.includes(current)) sel.value = current;
 }
 
+let _statsBuilt = false;
 function updateStats(rows) {
-  const total = rows.length;
-  const done  = rows.filter(r => r.disp).length;
+  const total   = rows.length;
+  const done    = rows.filter(r => r.disp).length;
   const noNotes = rows.filter(r => !r.notes || !r.notes.trim()).length;
   const pending = total - done;
-  const pct   = total ? Math.round(done / total * 100) : 0;
+  const pct     = total ? Math.round(done / total * 100) : 0;
+  const pctColor = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
 
-  document.getElementById('stats-row').innerHTML = `
+  if (!_statsBuilt) {
+    document.getElementById('stats-row').innerHTML = `
     <div class="stat-chip">
       <div class="stat-icon stat-icon-blue">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.72 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.63 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
       </div>
-      <div>
-        <div class="stat-val">${total}</div>
-        <div class="stat-label">Calls shown</div>
-      </div>
+      <div><div class="stat-val" id="sv-total"></div><div class="stat-label">Calls shown</div></div>
     </div>
     <div class="stat-chip">
       <div class="stat-icon stat-icon-green">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div>
-        <div class="stat-val" style="color:var(--green)">${done}</div>
-        <div class="stat-label">Dispositioned</div>
-      </div>
+      <div><div class="stat-val" id="sv-done" style="color:var(--green)"></div><div class="stat-label">Dispositioned</div></div>
     </div>
-    <div class="stat-chip">
+    <div class="stat-chip clickable" id="chip-pending" onclick="togglePendingFilter()" title="Click to show only pending calls">
       <div class="stat-icon stat-icon-yellow">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       </div>
-      <div>
-        <div class="stat-val" style="color:var(--yellow)">${pending}</div>
-        <div class="stat-label">Pending</div>
-      </div>
+      <div><div class="stat-val" id="sv-pending" style="color:var(--yellow)"></div><div class="stat-label">Pending</div></div>
     </div>
     <div class="stat-chip">
       <div class="stat-icon stat-icon-pct">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
       </div>
-      <div>
-        <div class="stat-val" style="color:${pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)'}">${pct}%</div>
-        <div class="stat-label">Complete</div>
-      </div>
-    </div>
-  `;
+      <div><div class="stat-val" id="sv-pct"></div><div class="stat-label">Complete</div></div>
+    </div>`;
+    _statsBuilt = true;
+  }
 
-  // progress bar
+  document.getElementById('sv-total').textContent   = total;
+  document.getElementById('sv-done').textContent    = done;
+  document.getElementById('sv-pending').textContent = pending;
+  const pctEl = document.getElementById('sv-pct');
+  pctEl.textContent = pct + '%';
+  pctEl.style.color = pctColor;
+
   const pw = document.getElementById('progress-wrap');
   if (total > 0) {
     pw.style.display = 'block';
-    const donePct  = (done / total * 100).toFixed(1);
-    const warnPct  = (noNotes / total * 100).toFixed(1);
-    const pendPct  = Math.max(0, 100 - parseFloat(donePct) - parseFloat(warnPct)).toFixed(1);
+    const donePct = (done    / total * 100).toFixed(1);
+    const warnPct = (noNotes / total * 100).toFixed(1);
+    const pendPct = Math.max(0, 100 - parseFloat(donePct) - parseFloat(warnPct)).toFixed(1);
     document.getElementById('prog-done').style.width = donePct + '%';
     document.getElementById('prog-warn').style.width = warnPct + '%';
     document.getElementById('prog-pend').style.width = pendPct + '%';
-    document.getElementById('prog-label-done').textContent = donePct > 0 ? done + ' done' : '';
+    document.getElementById('prog-label-done').textContent = donePct > 0 ? done    + ' done'     : '';
     document.getElementById('prog-label-warn').textContent = noNotes > 0 ? noNotes + ' no notes' : '';
-    document.getElementById('prog-label-pend').textContent = pending > 0 ? pending + ' pending' : '';
+    document.getElementById('prog-label-pend').textContent = pending > 0 ? pending + ' pending'  : '';
   } else {
     pw.style.display = 'none';
   }
+}
+
+// ── BULK DISPOSITION ──
+const selectedRows = new Set();
+
+function populateBulkSelect() {
+  const sel = document.getElementById('bulk-disp-select');
+  if (sel.options.length > 1) return; // already populated
+  DISPOSITIONS.filter(d => d).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    sel.appendChild(o);
+  });
+}
+
+function onRowCheckChange() {
+  const checkboxes = document.querySelectorAll('tbody .row-cb');
+  checkboxes.forEach(cb => {
+    const rn = parseInt(cb.dataset.rownum);
+    if (cb.checked) selectedRows.add(rn);
+    else selectedRows.delete(rn);
+  });
+  updateBulkBar();
+}
+
+function toggleSelectAll(masterCb) {
+  const checkboxes = document.querySelectorAll('tbody .row-cb');
+  checkboxes.forEach(cb => {
+    cb.checked = masterCb.checked;
+    const rn = parseInt(cb.dataset.rownum);
+    if (masterCb.checked) selectedRows.add(rn);
+    else selectedRows.delete(rn);
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  const count = document.getElementById('bulk-count');
+  const n = selectedRows.size;
+  if (n > 0) {
+    bar.classList.add('visible');
+    count.textContent = `${n} row${n > 1 ? 's' : ''} selected`;
+    populateBulkSelect();
+  } else {
+    bar.classList.remove('visible');
+  }
+  // sync master checkbox state
+  const masterCb = document.getElementById('select-all-cb');
+  const allCbs = document.querySelectorAll('tbody .row-cb');
+  if (masterCb && allCbs.length) {
+    const checkedCount = [...allCbs].filter(c => c.checked).length;
+    masterCb.indeterminate = checkedCount > 0 && checkedCount < allCbs.length;
+    masterCb.checked = checkedCount === allCbs.length;
+  }
+}
+
+function clearBulkSelection() {
+  selectedRows.clear();
+  document.querySelectorAll('tbody .row-cb').forEach(cb => cb.checked = false);
+  const masterCb = document.getElementById('select-all-cb');
+  if (masterCb) { masterCb.checked = false; masterCb.indeterminate = false; }
+  document.getElementById('bulk-bar').classList.remove('visible');
+}
+
+async function applyBulkDisp() {
+  const value = document.getElementById('bulk-disp-select').value;
+  if (!value) { showToast('⚠ Pick a disposition first.', 'error'); return; }
+  const rowNums = [...selectedRows];
+  if (!rowNums.length) return;
+
+  const btn = document.getElementById('bulk-apply-btn');
+  btn.disabled = true;
+  btn.textContent = `Saving ${rowNums.length}…`;
+
+  const modifierInitials = currentUser
+    ? (currentUser.name || currentUser.email).split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    : '';
+
+  // Update local state first — UI feels instant
+  const mods = (() => { try { return JSON.parse(localStorage.getItem('ags_modifiers') || '{}'); } catch(e) { return {}; } })();
+  rowNums.forEach(rn => {
+    const row = allRows.find(r => r.rowNum === rn);
+    if (row) { row.disp = value; row.modifier = modifierInitials; }
+    mods[rn] = modifierInitials;
+    // patch the dropdown in the DOM if it's currently visible
+    const sel = document.querySelector(`tr[data-rownum="${rn}"] .disp-select`);
+    if (sel) { sel.value = value; sel.classList.add('has-value', 'saved'); setTimeout(() => sel.classList.remove('saved'), 600); }
+    const tr = document.querySelector(`tr[data-rownum="${rn}"]`);
+    if (tr) tr.classList.remove('row-no-disp');
+  });
+  try { localStorage.setItem('ags_modifiers', JSON.stringify(mods)); } catch(e) {}
+
+  // Fire saves to the sheet
+  if (config.scriptUrl) {
+    setSyncState('syncing', `Saving ${rowNums.length}…`);
+    let saved = 0, failed = 0;
+    await Promise.all(rowNums.map(async rn => {
+      try {
+        await fetch(config.scriptUrl, {
+          method: 'POST', mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ row: rn, col: 7, value, sheetName: config.sheetName })
+        });
+        saved++;
+      } catch(e) { failed++; }
+    }));
+    setSyncState(failed ? 'error' : 'live', failed ? `${failed} failed` : `Live · ${allRows.length} calls`);
+    showToast(failed ? `⚠ ${saved} saved, ${failed} failed` : `✓ ${saved} rows set to "${value}"`, failed ? 'error' : 'success');
+  } else {
+    showToast(`✓ ${rowNums.length} rows set to "${value}" (local only)`, 'success');
+  }
+
+  updateStats(getFilteredSortedRows());
+  btn.disabled = false;
+  btn.textContent = 'Apply to selected';
+  clearBulkSelection();
 }
 
 // ── SAVE DISPOSITION ──
