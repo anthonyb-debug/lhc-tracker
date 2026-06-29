@@ -2499,21 +2499,41 @@ function copyPhone(btn) {
 }
 
 // ── PENDING ALERT ──
-let _lastAlertedPending = -1;  // track when we last triggered the alert
+let _pendingAlertTimer   = null;   // 15-min repeat timer handle
+let _pendingThresholdMet = false;  // true while pending >= 10
+const PENDING_ALERT_INTERVAL = 15 * 60 * 1000; // 15 minutes in ms
+
+function showPendingAlert(pending) {
+  document.getElementById('pending-alert-count').textContent = pending;
+  document.getElementById('pending-alert-overlay').classList.add('open');
+}
 
 function checkPendingAlert(pending) {
-  // Fire when pending crosses up to/past 10 (only once per threshold crossing)
-  if (pending >= 10 && _lastAlertedPending < 10) {
-    document.getElementById('pending-alert-count').textContent = pending;
-    document.getElementById('pending-alert-overlay').classList.add('open');
+  if (pending >= 10) {
+    if (!_pendingThresholdMet) {
+      // Just crossed threshold — show immediately and start 15-min repeat timer
+      _pendingThresholdMet = true;
+      showPendingAlert(pending);
+      _pendingAlertTimer = setInterval(() => {
+        // Re-alert only if still at/above 10 (count may have changed)
+        const currentPending = parseInt(document.getElementById('sv-pending').textContent, 10) || 0;
+        if (currentPending >= 10) showPendingAlert(currentPending);
+      }, PENDING_ALERT_INTERVAL);
+    }
+    // else: already above threshold — timer is running, nothing to do
+  } else {
+    // Pending dropped below 10 — clear everything for a clean reset
+    if (_pendingThresholdMet) {
+      _pendingThresholdMet = false;
+      clearInterval(_pendingAlertTimer);
+      _pendingAlertTimer = null;
+    }
   }
-  _lastAlertedPending = pending;
 }
 
 function closePendingAlert() {
   document.getElementById('pending-alert-overlay').classList.remove('open');
-  // Reset so alert can fire again if pending climbs back up after being reduced
-  _lastAlertedPending = 9;
+  // Timer keeps running — will re-alert after 15 min if still >= 10
 }
 
 // ── GUIDE & DASHBOARD MODALS ──
