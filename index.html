@@ -185,6 +185,77 @@
 
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
+  /* ══════════════════════════════════════════
+     PENDING ALERT MODAL
+  ══════════════════════════════════════════ */
+  #pending-alert-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+    animation: fadeInOverlay 0.2s ease;
+  }
+  #pending-alert-overlay.open { display: flex; }
+
+  @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUpModal  { from { transform: translateY(18px) scale(0.97); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+  .pending-alert-box {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-top: 3px solid var(--yellow);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 28px 28px 22px;
+    max-width: 380px;
+    width: calc(100% - 40px);
+    text-align: center;
+    animation: slideUpModal 0.25s cubic-bezier(0.34,1.2,0.64,1);
+  }
+  .pending-alert-icon {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--yellow-dim);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    animation: pulse 1.8s infinite;
+  }
+  .pending-alert-icon svg { color: var(--yellow); }
+  .pending-alert-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+  }
+  .pending-alert-body {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin-bottom: 22px;
+  }
+  .pending-alert-body strong { color: var(--yellow); font-weight: 700; }
+  .pending-alert-ok {
+    width: 100%;
+    padding: 10px;
+    background: var(--yellow);
+    color: #0d0f14;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: var(--font);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.01em;
+  }
+  .pending-alert-ok:hover  { opacity: 0.88; }
+  .pending-alert-ok:active { transform: scale(0.98); }
+
   /* ── Header buttons ── */
   .btn-secondary {
     display: inline-flex;
@@ -2117,6 +2188,9 @@ function updateStats(rows) {
   pctEl.textContent = pct + '%';
   pctEl.style.color = pctColor;
 
+  // ── PENDING ALERT: show popup when pending hits 10 or more ──
+  checkPendingAlert(pending);
+
   const pw = document.getElementById('progress-wrap');
   if (total > 0) {
     pw.style.display = 'block';
@@ -2424,6 +2498,24 @@ function copyPhone(btn) {
   });
 }
 
+// ── PENDING ALERT ──
+let _lastAlertedPending = -1;  // track when we last triggered the alert
+
+function checkPendingAlert(pending) {
+  // Fire when pending crosses up to/past 10 (only once per threshold crossing)
+  if (pending >= 10 && _lastAlertedPending < 10) {
+    document.getElementById('pending-alert-count').textContent = pending;
+    document.getElementById('pending-alert-overlay').classList.add('open');
+  }
+  _lastAlertedPending = pending;
+}
+
+function closePendingAlert() {
+  document.getElementById('pending-alert-overlay').classList.remove('open');
+  // Reset so alert can fire again if pending climbs back up after being reduced
+  _lastAlertedPending = 9;
+}
+
 // ── GUIDE & DASHBOARD MODALS ──
 function showGuide() {
   document.getElementById('guide-modal').classList.add('open');
@@ -2531,6 +2623,25 @@ function renderDashboard() {
 }
 
 </script>
+
+<!-- PENDING ALERT MODAL -->
+<div id="pending-alert-overlay">
+  <div class="pending-alert-box">
+    <div class="pending-alert-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div class="pending-alert-title">Disposition Pending Leads</div>
+    <div class="pending-alert-body">
+      You have <strong id="pending-alert-count">10</strong> calls without a disposition.<br>
+      Please take a moment to disposition all pending leads before they pile up.
+    </div>
+    <button class="pending-alert-ok" onclick="closePendingAlert()">OK, I'll Take Care of It</button>
+  </div>
+</div>
 
 <!-- CSV DOWNLOAD MODAL -->
 <div class="modal-overlay" id="csv-modal" onclick="closeModal('csv-modal')">
