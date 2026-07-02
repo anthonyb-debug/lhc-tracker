@@ -747,125 +747,6 @@
   @keyframes flash-save { 0%{background:rgba(54,214,138,.15)} 100%{background:var(--accent-dim)} }
   .disp-select.saved.has-value { animation: flash-save .5s ease; }
 
-  /* ── Disposition colour categories ── */
-  .disp-select.disp-green  { border-color:rgba(54,214,138,.4);  background-color:rgba(54,214,138,.08);  color:var(--green); }
-  .disp-select.disp-blue   { border-color:rgba(91,141,238,.4);  background-color:rgba(91,141,238,.08);  color:var(--accent); }
-  .disp-select.disp-yellow { border-color:rgba(245,166,35,.4);  background-color:rgba(245,166,35,.08);  color:var(--yellow); }
-  .disp-select.disp-red    { border-color:rgba(240,99,122,.4);  background-color:rgba(240,99,122,.08);  color:var(--red); }
-  .disp-select.disp-purple { border-color:rgba(167,139,250,.4); background-color:rgba(167,139,250,.08); color:#a78bfa; }
-  .disp-select.disp-teal   { border-color:rgba(45,212,191,.4);  background-color:rgba(45,212,191,.08);  color:#2dd4bf; }
-  .disp-select.disp-orange { border-color:rgba(251,146,60,.4);  background-color:rgba(251,146,60,.08);  color:#fb923c; }
-
-  /* ── Notes hover tooltip ── */
-  .notes-preview-wrap { position: relative; display: inline-block; width: 100%; }
-  .notes-tooltip {
-    display: none;
-    position: absolute;
-    left: 0; top: calc(100% + 6px);
-    z-index: 300;
-    background: #1e2333;
-    color: #e2e8f0;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    padding: 10px 13px;
-    font-size: 12px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-    max-width: 280px;
-    min-width: 160px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.5);
-    pointer-events: none;
-  }
-  .notes-preview-wrap:hover .notes-tooltip { display: block; }
-
-  /* ── Last Modified By badge ── */
-  .modifier-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px; height: 22px;
-    border-radius: 5px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    flex-shrink: 0;
-    border: 1px solid rgba(91,141,238,.2);
-    title: attr(title);
-  }
-  .disp-cell-wrap { display: flex; align-items: center; gap: 6px; }
-
-  /* ── Quick-filter chips ── */
-  .quick-chips {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-  .quick-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border: 1px solid var(--border2);
-    border-radius: 20px;
-    background: var(--surface2);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all .15s;
-    user-select: none;
-    white-space: nowrap;
-  }
-  .quick-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-  .quick-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-  .quick-chip.chip-today.active  { border-color: var(--green);  color: var(--green);  background: var(--green-dim); }
-  .quick-chip.chip-answered.active { border-color: var(--green); color: var(--green); background: var(--green-dim); }
-  .quick-chip.chip-mine.active   { border-color: var(--yellow); color: var(--yellow); background: var(--yellow-dim); }
-  .quick-chip-sep { width:1px; height:16px; background: var(--border2); flex-shrink:0; }
-
-  /* ── Dashboard tabs ── */
-  .dash-tabs {
-    display: flex;
-    gap: 2px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-  }
-  .dash-tab {
-    padding: 7px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    border: none;
-    border-bottom: 2px solid transparent;
-    background: none;
-    cursor: pointer;
-    font-family: var(--font);
-    transition: color .15s, border-color .15s;
-    margin-bottom: -1px;
-  }
-  .dash-tab:hover { color: var(--text); }
-  .dash-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-  /* ── Disposition breakdown ── */
-  .disp-breakdown-wrap { display: flex; flex-direction: column; gap: 8px; }
-  .disp-bar-row {
-    display: grid;
-    grid-template-columns: 200px 1fr 48px 54px;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-  }
-  .disp-bar-label { color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .disp-bar-track { background: var(--surface3); border-radius: 99px; height: 8px; overflow: hidden; }
-  .disp-bar-fill  { height: 100%; border-radius: 99px; transition: width .5s ease; }
-  .disp-bar-count { color: var(--text); font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
-  .disp-bar-pct   { color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; font-size: 11px; }
-
   /* ══════════════════════════════════════════
      CONFIG PANEL
   ══════════════════════════════════════════ */
@@ -1352,28 +1233,6 @@ function doGet(e) {
 
 <!-- MAIN APP -->
 <div id="app">
-  <!-- Quick-filter chips -->
-  <div class="quick-chips" id="quick-chips">
-    <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Quick:</span>
-    <button class="quick-chip chip-today" onclick="toggleQuickChip('today')" id="chip-today">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Today
-    </button>
-    <button class="quick-chip chip-answered" onclick="toggleQuickChip('answered')" id="chip-answered">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
-      Answered
-    </button>
-    <button class="quick-chip chip-mine" onclick="toggleQuickChip('mine')" id="chip-mine">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      My Calls
-    </button>
-    <div class="quick-chip-sep"></div>
-    <button class="quick-chip" onclick="clearAllFilters()" style="color:var(--text-dim);">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      Clear filters
-    </button>
-  </div>
-
   <div class="toolbar">
     <div class="search-box">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -1440,11 +1299,10 @@ function doGet(e) {
           <th onclick="sortBy('agent')" data-col="agent">Agent <span class="sort-arrow">↕</span></th>
           <th>Notes</th>
           <th>Disposition</th>
-          <th title="Last Modified By" style="width:42px;">By</th>
         </tr>
       </thead>
       <tbody id="table-body">
-        <tr><td colspan="10"><div class="state-center"><div class="spinner"></div><p>Loading calls…</p></div></td></tr>
+        <tr><td colspan="9"><div class="state-center"><div class="spinner"></div><p>Loading calls…</p></div></td></tr>
       </tbody>
     </table>
     <div class="pagination-bar" id="pagination-bar" style="display:none;">
@@ -1843,7 +1701,7 @@ async function loadData() {
 
   if (isFirstLoad) {
     setSyncState('syncing', 'Loading…');
-    tbody.innerHTML = `<tr><td colspan="10"><div class="state-center"><div class="spinner"></div><p>Fetching from Google Sheets…</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9"><div class="state-center"><div class="spinner"></div><p>Fetching from Google Sheets…</p></div></td></tr>`;
   } else {
     // background refresh: don't blank the table, just pulse the dot
     setSyncState('syncing', 'Syncing…');
@@ -1892,7 +1750,7 @@ async function loadData() {
   } catch(e) {
     if (isFirstLoad) {
       setSyncState('error', 'Error');
-      tbody.innerHTML = `<tr><td colspan="10"><div class="state-center">
+      tbody.innerHTML = `<tr><td colspan="9"><div class="state-center">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <p style="color:var(--red);font-weight:600;">Failed to load: ${e.message}</p>
         <p style="font-size:12px;margin-top:8px;text-align:left;line-height:1.8;">
@@ -1972,34 +1830,28 @@ function mergeAndUpdate(newRows) {
 // ── PATCH A SINGLE ROW'S CELLS IN PLACE ──
 function updateRowCells(tr, r) {
   const cells = tr.children;
-  // 0=checkbox, 1=rowNum, 2=phone, 3=status, 4=date, 5=time, 6=agent, 7=notes, 8=disposition+badge
-  cells[1].textContent = r.rowNum;
-  cells[2].innerHTML = `<div class="td-phone-wrap"><span>${r.phone}</span><button class="copy-btn" data-phone="${r.phone}" onclick="copyPhone(this)" title="Copy number"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
-  cells[3].innerHTML = statusBadge(r.status);
-  cells[4].textContent = r.date;
-  cells[5].textContent = r.time;
-  cells[6].textContent = shortAgent(r.agent);
-  cells[6].title = escAttr(r.agent);
+  cells[0].textContent = r.rowNum;
+  cells[1].innerHTML = `<div class="td-phone-wrap"><span>${r.phone}</span><button class="copy-btn" data-phone="${r.phone}" onclick="copyPhone(this)" title="Copy number"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
+  cells[2].innerHTML = statusBadge(r.status);
+  cells[3].textContent = r.date;
+  cells[4].textContent = r.time;
+  cells[5].textContent = shortAgent(r.agent);
+  cells[5].title = escAttr(r.agent);
   const missingNotes = !r.notes || !r.notes.trim();
-  cells[7].classList.toggle('notes-missing', missingNotes);
-  cells[7].title = missingNotes ? '⚠ Notes required' : r.notes;
-  cells[7].innerHTML = missingNotes
+  cells[6].classList.toggle('notes-missing', missingNotes);
+  cells[6].title = missingNotes ? '⚠ Notes required' : r.notes;
+  cells[6].innerHTML = missingNotes
     ? '<span class="notes-warn-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fill notes</span>'
-    : `<div class="notes-preview-wrap">${escAttr(r.notes)}<div class="notes-tooltip">${escAttr(r.notes)}</div></div>`;
+    : r.notes;
   tr.classList.toggle('row-no-disp', !r.disp);
 
-  const select = cells[8].querySelector('select');
+  const select = cells[7].querySelector('select');
   if (select && !dispDropdownOpen && select.value !== r.disp) {
     select.value = r.disp;
     select.classList.toggle('has-value', !!r.disp);
-    Object.values(DISP_COLOR_MAP).forEach(c => select.classList.remove(c));
-    if (r.disp) select.classList.add(dispColorClass(r.disp));
     select.classList.add('saved');
     setTimeout(() => select.classList.remove('saved'), 600);
   }
-  // update modifier badge
-  const badge = cells[8].querySelector('.modifier-badge');
-  if (badge && r.modifier) { badge.textContent = r.modifier; badge.style.opacity = '1'; badge.title = `Last modified by ${r.modifier}`; }
 }
 
 // ── DATE FILTER HELPERS ──
@@ -2084,17 +1936,6 @@ function getFilteredSortedRows() {
       const hay = [r.phone, r.agent, r.notes, r.disp, r.status].join(' ').toLowerCase();
       if (!hay.includes(search)) return false;
     }
-    // Quick chip filters
-    if (_activeQuickChips.has('today')) {
-      const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
-      if (parseRowDate(r.date) !== today) return false;
-    }
-    if (_activeQuickChips.has('answered')) {
-      if (!r.status.toLowerCase().includes('answered')) return false;
-    }
-    if (_activeQuickChips.has('mine') && currentUser) {
-      if (r.agent !== currentUser.email) return false;
-    }
     return true;
   });
 
@@ -2138,7 +1979,7 @@ function renderTable() {
   const paginationBar = document.getElementById('pagination-bar');
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10"><div class="state-center">
+    tbody.innerHTML = `<tr><td colspan="9"><div class="state-center">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <p>No calls match your filters.</p>
     </div></td></tr>`;
@@ -2160,16 +2001,7 @@ function renderTable() {
   const end = Math.min(start + pageSize, rows.length);
   const pageRows = rows.slice(start, end);
 
-  tbody.innerHTML = pageRows.map(r => {
-    const missingNotes = !r.notes || !r.notes.trim();
-    const notesCell = missingNotes
-      ? `<span class="notes-warn-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fill notes</span>`
-      : `<div class="notes-preview-wrap">${escAttr(r.notes)}<div class="notes-tooltip">${escAttr(r.notes)}</div></div>`;
-    const dispColorCls = r.disp ? dispColorClass(r.disp) : '';
-    const modBadge = r.modifier
-      ? `<span class="modifier-badge" title="Last modified by ${r.modifier}">${r.modifier}</span>`
-      : `<span class="modifier-badge" style="opacity:0;pointer-events:none">--</span>`;
-    return `
+  tbody.innerHTML = pageRows.map(r => `
     <tr data-rownum="${r.rowNum}" class="${!r.disp ? 'row-no-disp' : ''}">
       <td class="td-check"><input type="checkbox" class="row-cb" data-rownum="${r.rowNum}" onchange="onRowCheckChange()" ${selectedRows.has(r.rowNum) ? 'checked' : ''}></td>
       <td class="td-row-num">${r.rowNum}</td>
@@ -2185,17 +2017,14 @@ function renderTable() {
       <td class="td-date">${r.date}</td>
       <td class="td-time">${r.time}</td>
       <td class="td-agent" title="${escAttr(r.agent)}">${shortAgent(r.agent)}</td>
-      <td class="td-notes${missingNotes ? ' notes-missing' : ''}" title="${missingNotes ? '⚠ Notes required' : escAttr(r.notes)}">${notesCell}</td>
+      <td class="td-notes${!r.notes || !r.notes.trim() ? ' notes-missing' : ''}" title="${!r.notes || !r.notes.trim() ? '⚠ Notes required' : escAttr(r.notes)}">${!r.notes || !r.notes.trim() ? '<span class="notes-warn-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Fill notes</span>' : escAttr(r.notes)}</td>
       <td class="disposition-cell">
-        <div class="disp-cell-wrap">
-          <select class="disp-select ${r.disp ? 'has-value ' + dispColorCls : ''}" data-row="${r.rowNum}" onchange="saveDisp(this, ${r.rowNum})" data-modifier="${r.modifier || ''}">
-            ${DISPOSITIONS.map(d => `<option value="${d}" ${d === r.disp ? 'selected' : ''}>${d || '— Select disposition —'}</option>`).join('')}
-          </select>
-          ${modBadge}
-        </div>
+        <select class="disp-select ${r.disp ? 'has-value' : ''}" data-row="${r.rowNum}" onchange="saveDisp(this, ${r.rowNum})" data-modifier="${r.modifier || ''}" >
+          ${DISPOSITIONS.map(d => `<option value="${d}" ${d === r.disp ? 'selected' : ''}>${d || '— Select disposition —'}</option>`).join('')}
+        </select>
       </td>
-    </tr>`;
-  }).join('');
+    </tr>
+  `).join('');
 
   // Update pagination bar
   paginationBar.style.display = 'flex';
@@ -2535,15 +2364,6 @@ async function saveDisp(select, rowNum) {
     select.classList.remove('saving');
     select.classList.add('saved');
     select.classList.toggle('has-value', !!value);
-    // apply / remove colour class
-    Object.values(DISP_COLOR_MAP).forEach(c => select.classList.remove(c));
-    if (value) select.classList.add(dispColorClass(value));
-    // update modifier badge in DOM
-    const wrap = select.closest('.disp-cell-wrap');
-    if (wrap) {
-      let badge = wrap.querySelector('.modifier-badge');
-      if (badge && modifierInitials) { badge.textContent = modifierInitials; badge.title = `Last modified by ${modifierInitials}`; badge.style.opacity = '1'; }
-    }
     setTimeout(() => select.classList.remove('saved'), 600);
     setSyncState('live', `Live · ${allRows.length} calls`);
     showToast(`✓ Saved: Row ${rowNum} → "${value || '(cleared)'}"`, 'success');
@@ -2724,88 +2544,8 @@ function showGuide() {
 function showDashboard() {
   populateDashFilters();
   renderDashboard();
-  renderDrivers();
   document.getElementById('dashboard-modal').classList.add('open');
 }
-
-let _currentDashTab = 'agents';
-
-function switchDashTab(tab) {
-  _currentDashTab = tab;
-  document.getElementById('dash-tab-agents').classList.toggle('active', tab === 'agents');
-  document.getElementById('dash-tab-drivers').classList.toggle('active', tab === 'drivers');
-  document.getElementById('dash-panel-agents').style.display  = tab === 'agents'  ? '' : 'none';
-  document.getElementById('dash-panel-drivers').style.display = tab === 'drivers' ? '' : 'none';
-}
-
-// Colour palette for disposition bars (index-stable, not tied to value)
-const DRIVER_COLORS = [
-  '#5b8dee','#36d68a','#f5a623','#f0637a','#a78bfa',
-  '#2dd4bf','#fb923c','#60a5fa','#34d399','#f472b6',
-  '#818cf8','#fbbf24','#94a3b8','#4ade80','#c084fc','#e879f9'
-];
-
-function renderDrivers() {
-  const dateInput   = document.getElementById('dash-date-input')?.value || '';
-  const agentFilter = document.getElementById('dash-agent-select')?.value || 'all';
-
-  // Build filtered rows using the same filters as the agents tab
-  const rows = allRows.filter(r => {
-    if (dateInput && parseRowDate(r.date) !== dateInput) return false;
-    if (agentFilter !== 'all' && r.agent !== agentFilter) return false;
-    return true;
-  });
-
-  // Count each disposition (skip blank/pending)
-  const counts = {};
-  let totalDispositioned = 0;
-  rows.forEach(r => {
-    if (!r.disp) return;
-    counts[r.disp] = (counts[r.disp] || 0) + 1;
-    totalDispositioned++;
-  });
-
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const maxCount = sorted.length ? sorted[0][1] : 1;
-
-  const el = document.getElementById('dashboard-drivers-content');
-  if (!el) return;
-
-  if (!sorted.length) {
-    el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:30px;">No dispositioned calls match the current filters.</p>';
-    return;
-  }
-
-  const pendingCount = rows.filter(r => !r.disp).length;
-
-  let html = `
-    <div style="margin-bottom:16px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);display:flex;gap:24px;flex-wrap:wrap;">
-      <div><span style="font-size:20px;font-weight:800;color:var(--text);">${rows.length}</span><span style="font-size:11px;color:var(--text-muted);margin-left:6px;">Total calls</span></div>
-      <div><span style="font-size:20px;font-weight:800;color:var(--green);">${totalDispositioned}</span><span style="font-size:11px;color:var(--text-muted);margin-left:6px;">Dispositioned</span></div>
-      <div><span style="font-size:20px;font-weight:800;color:var(--yellow);">${pendingCount}</span><span style="font-size:11px;color:var(--text-muted);margin-left:6px;">Pending</span></div>
-      <div><span style="font-size:20px;font-weight:800;color:var(--text);">${sorted.length}</span><span style="font-size:11px;color:var(--text-muted);margin-left:6px;">Unique dispositions used</span></div>
-    </div>
-    <div class="disp-breakdown-wrap">`;
-
-  sorted.forEach(([disp, count], i) => {
-    const pct = totalDispositioned ? Math.round(count / totalDispositioned * 100) : 0;
-    const barWidth = Math.round(count / maxCount * 100);
-    const color = DRIVER_COLORS[i % DRIVER_COLORS.length];
-    const rank = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-    html += `
-      <div class="disp-bar-row">
-        <div class="disp-bar-label" title="${escAttr(disp)}"><span style="margin-right:6px;font-size:11px;">${rank}</span>${escAttr(disp)}</div>
-        <div class="disp-bar-track"><div class="disp-bar-fill" style="width:${barWidth}%;background:${color};"></div></div>
-        <div class="disp-bar-count" style="color:${color};">${count}</div>
-        <div class="disp-bar-pct">${pct}%</div>
-      </div>`;
-  });
-
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
@@ -2821,69 +2561,6 @@ function populateDashFilters() {
 function clearDashDate() {
   document.getElementById('dash-date-input').value = '';
   renderDashboard();
-}
-
-// ── DISPOSITION COLOUR MAP ──
-const DISP_COLOR_MAP = {
-  'Live Transfer (VOB)':               'disp-green',
-  'Live Transfer (No Insurance Info)': 'disp-blue',
-  'Private pay':                       'disp-green',
-  'Callbacks':                         'disp-yellow',
-  'Missed Call Follow Up':             'disp-yellow',
-  'Calling for specific center':       'disp-blue',
-  'HMO referral':                      'disp-purple',
-  'Medicaid / No funds':               'disp-orange',
-  'Hung up':                           'disp-red',
-  'Dead air / Automated':              'disp-red',
-  'Not treatment related':             'disp-red',
-  'Handled by another rep':            'disp-teal',
-  'Facility call':                     'disp-teal',
-  'Looking for AA-NA':                 'disp-purple',
-  'Looking for MAT':                   'disp-purple',
-  'Searching for a loved one':         'disp-orange',
-};
-
-function dispColorClass(val) {
-  return DISP_COLOR_MAP[val] || '';
-}
-
-// ── QUICK FILTER CHIPS ──
-const _activeQuickChips = new Set();
-
-function toggleQuickChip(type) {
-  const btn = document.getElementById('chip-' + type);
-  if (_activeQuickChips.has(type)) {
-    _activeQuickChips.delete(type);
-    btn.classList.remove('active');
-  } else {
-    _activeQuickChips.add(type);
-    btn.classList.add('active');
-  }
-  currentPage = 1;
-  renderTable();
-}
-
-function clearAllFilters() {
-  // clear quick chips
-  _activeQuickChips.clear();
-  ['today','answered','mine'].forEach(t => {
-    const b = document.getElementById('chip-' + t);
-    if (b) b.classList.remove('active');
-  });
-  // clear dropdowns
-  document.getElementById('filter-status').value = '';
-  document.getElementById('filter-agent').value  = '';
-  document.getElementById('filter-disp').value   = '';
-  // clear date
-  document.getElementById('filter-date-from').value = '';
-  document.getElementById('filter-date-to').value   = '';
-  document.getElementById('date-clear-btn').classList.remove('visible');
-  // clear search
-  document.getElementById('search-input').value = '';
-  document.getElementById('search-clear-btn').classList.remove('visible');
-  syncPendingChip();
-  currentPage = 1;
-  renderTable();
 }
 
 function renderDashboard() {
@@ -2963,7 +2640,6 @@ function renderDashboard() {
     });
   }
   document.getElementById('dashboard-content').innerHTML = html;
-  renderDrivers();
 }
 
 </script>
@@ -3058,12 +2734,6 @@ function renderDashboard() {
       <button class="modal-close" onclick="closeModal('dashboard-modal')">✕</button>
     </div>
     <div class="modal-body">
-      <!-- Tabs -->
-      <div class="dash-tabs">
-        <button class="dash-tab active" id="dash-tab-agents" onclick="switchDashTab('agents')">Agent Summary</button>
-        <button class="dash-tab" id="dash-tab-drivers" onclick="switchDashTab('drivers')">📞 Top Call Drivers</button>
-      </div>
-
       <div class="dash-filter-row">
         <label>Filter by date:</label>
         <input type="date" id="dash-date-input" onchange="renderDashboard()" style="padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;"/>
@@ -3073,16 +2743,7 @@ function renderDashboard() {
           <option value="all">All agents</option>
         </select>
       </div>
-
-      <!-- Agent summary panel -->
-      <div id="dash-panel-agents">
-        <div id="dashboard-content"></div>
-      </div>
-
-      <!-- Top call drivers panel -->
-      <div id="dash-panel-drivers" style="display:none;">
-        <div id="dashboard-drivers-content"></div>
-      </div>
+      <div id="dashboard-content"></div>
     </div>
   </div>
 </div>
