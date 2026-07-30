@@ -223,6 +223,7 @@
     color: var(--text);
     max-width: 190px;
     margin-left: 4px;
+    position: relative;
   }
   .user-avatar-initials {
     width: 28px; height: 28px; border-radius: 50%;
@@ -241,8 +242,24 @@
     display: flex; align-items: center; justify-content: center;
     line-height: 1; box-sizing: border-box;
     box-shadow: 0 0 0 2px var(--surface);
-    pointer-events: none;
+    cursor: pointer;
+    transition: transform .12s;
   }
+  .avatar-badge:hover { transform: scale(1.12); }
+  .disp-popover {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    width: 232px; z-index: 250;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    padding: 12px 14px; font-size: 12px; line-height: 1.55; color: var(--text);
+    text-align: left;
+  }
+  .disp-popover-link {
+    color: var(--accent); font-weight: 800; cursor: pointer;
+    text-decoration: underline; white-space: nowrap;
+  }
+  .disp-popover-link:hover { opacity: 0.82; }
   .user-details { overflow: hidden; }
   .user-name  { font-weight: 700; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 115px; display: block; color: var(--text); }
   .user-email { font-size: 10px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 115px; display: block; }
@@ -1165,7 +1182,11 @@
     <div class="user-info-chip" id="user-info-chip" style="display:none;">
       <div class="user-avatar-wrap">
         <div class="user-avatar-initials" id="user-initials"></div>
-        <span class="avatar-badge" id="avatar-badge" style="display:none;" title="You have leads with no disposition"></span>
+        <span class="avatar-badge" id="avatar-badge" style="display:none;" title="You have leads with no disposition" onclick="toggleDispPopover(event)"></span>
+      </div>
+      <div class="disp-popover" id="disp-popover" style="display:none;">
+        You have <strong id="disp-popover-count">0</strong> <span id="disp-popover-lead-word">leads</span> with no disposition.
+        <a class="disp-popover-link" onclick="dispoNow()">Dispo them now.</a>
       </div>
       <div class="user-details">
         <span class="user-name" id="user-display-name"></span>
@@ -1950,7 +1971,9 @@ function onStatsDayChange() {
 }
 function shiftStatsDay(deltaDays) {
   // statsDay is a plain calendar key; shift it without timezone drift.
-  const [y, m, d] = statsDay.split('-').map(Number);
+  // If we're in "all days" mode (empty), start stepping from today.
+  const base = statsDay || todayEstKey();
+  const [y, m, d] = base.split('-').map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
   dt.setUTCDate(dt.getUTCDate() + deltaDays);
   statsDay = `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`;
@@ -2039,23 +2062,73 @@ function currentAgentKeys() {
 
 // Show a red count badge on the avatar for the logged-in agent's own leads
 // that still have no disposition (across all dates). Hidden when zero.
+// Count the logged-in agent's own leads (all dates) that still have no disposition.
+function myNoDispoCount() {
+  const keys = currentAgentKeys();
+  if (!keys.length) return 0;
+  return allRows.filter(r =>
+    r.agent && keys.includes(r.agent.toLowerCase().trim()) && !(r.disp && r.disp.trim())
+  ).length;
+}
+
 function updateAvatarBadge() {
   const badge = document.getElementById('avatar-badge');
   if (!badge) return;
-  const keys = currentAgentKeys();
-  let count = 0;
-  if (keys.length) {
-    count = allRows.filter(r =>
-      r.agent && keys.includes(r.agent.toLowerCase().trim()) && !(r.disp && r.disp.trim())
-    ).length;
-  }
+  const count = myNoDispoCount();
   if (count > 0) {
     badge.textContent = count > 99 ? '99+' : String(count);
     badge.style.display = 'flex';
-    badge.title = count + (count === 1 ? ' of your leads has' : ' of your leads have') + ' no disposition yet';
+    badge.title = count + (count === 1 ? ' of your leads has' : ' of your leads have') + ' no disposition yet — click for details';
   } else {
     badge.style.display = 'none';
+    hideDispPopover(); // nothing left to disposition
   }
+}
+
+// ── BADGE POPOVER: "You have N leads with no disposition. Dispo them now." ──
+function toggleDispPopover(e) {
+  if (e) e.stopPropagation();
+  const pop = document.getElementById('disp-popover');
+  if (!pop) return;
+  if (pop.style.display !== 'none') { hideDispPopover(); return; }
+  const count = myNoDispoCount();
+  if (count <= 0) { hideDispPopover(); return; }
+  document.getElementById('disp-popover-count').textContent = count;
+  document.getElementById('disp-popover-lead-word').textContent = count === 1 ? 'lead' : 'leads';
+  pop.style.display = 'block';
+  // Close when clicking anywhere outside the popover / chip
+  setTimeout(() => document.addEventListener('click', outsideDispClose), 0);
+}
+function outsideDispClose(ev) {
+  const pop = document.getElementById('disp-popover');
+  const chip = document.getElementById('user-info-chip');
+  if (pop && !pop.contains(ev.target) && chip && !chip.contains(ev.target)) hideDispPopover();
+}
+function hideDispPopover() {
+  const pop = document.getElementById('disp-popover');
+  if (pop) pop.style.display = 'none';
+  document.removeEventListener('click', outsideDispClose);
+}
+
+// Filter the board to the logged-in agent's own leads with no disposition,
+// across all dates (clears the day scope so every pending lead is visible).
+function dispoNow() {
+  hideDispPopover();
+  const keys = currentAgentKeys();
+  const agentSel = document.getElementById('filter-agent');
+  if (keys.length && agentSel) {
+    const opt = [...agentSel.options].find(o => o.value.toLowerCase().trim() === keys[0]);
+    if (opt) agentSel.value = opt.value;
+  }
+  statsDay = '';            // "all days" — show pending from every date
+  syncStatsDayInput();
+  const dispSel = document.getElementById('filter-disp');
+  if (dispSel) dispSel.value = '__empty__';
+  if (typeof syncPendingChip === 'function') syncPendingChip();
+  currentPage = 1;
+  renderTable();
+  const tableWrap = document.querySelector('.table-wrap');
+  if (tableWrap && tableWrap.scrollIntoView) tableWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function renderTable() {
@@ -2246,7 +2319,12 @@ function updateStats(rows) {
   // Cards summarize a single EST day (statsDay), scoped to that day's calls only —
   // independent of the table's own search/status/agent/disposition filters.
   syncStatsDayInput();
-  const dayRows = allRows.filter(r => parseRowDate(r.date) === statsDay);
+  // statsDay = '' means "all days" (used by the badge's "Dispo them now" action).
+  const dayRows = statsDay
+    ? allRows.filter(r => parseRowDate(r.date) === statsDay)
+    : allRows.slice();
+  const totalLabel = document.getElementById('sv-total-label');
+  if (totalLabel) totalLabel.textContent = statsDay ? 'Calls (this day)' : 'Calls (all days)';
 
   const total   = dayRows.length;
   const done    = dayRows.filter(r => r.disp).length;
@@ -2261,7 +2339,7 @@ function updateStats(rows) {
       <div class="stat-icon stat-icon-blue">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.72 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.63 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
       </div>
-      <div><div class="stat-val" id="sv-total"></div><div class="stat-label">Calls (this day)</div></div>
+      <div><div class="stat-val" id="sv-total"></div><div class="stat-label" id="sv-total-label">Calls (this day)</div></div>
     </div>
     <div class="stat-chip">
       <div class="stat-icon stat-icon-green">
