@@ -1019,70 +1019,101 @@
   ══════════════════════════════════════════ */
   #auth-overlay {
     position: fixed; inset: 0; z-index: 9999;
-    background: var(--bg);
-    display: flex; align-items: center; justify-content: center;
+    background: var(--surface);
+    display: flex; align-items: stretch;
+    overflow-y: auto;
     transition: opacity 0.35s ease;
   }
   #auth-overlay.hidden { opacity: 0; pointer-events: none; }
 
-  .auth-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 22px;
-    padding: 46px 40px;
-    width: 100%; max-width: 400px;
-    text-align: center;
-    box-shadow: var(--shadow-lg);
+  /* Brand side: stays deep blue in both themes */
+  .auth-aside {
+    position: relative; isolation: isolate; overflow: hidden;
+    flex: 0 0 46%; max-width: 700px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 48px;
+    padding: 44px 56px;
+    background: linear-gradient(155deg, #081427 0%, #0D2547 52%, #15427C 100%);
+    color: #E3ECF7;
   }
-  .auth-logo-badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 60px; height: 60px;
-    background: var(--blue);
-    border-radius: 18px;
-    margin-bottom: 22px;
-    box-shadow: 0 10px 26px -8px var(--blue);
+  .auth-aside::after {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; background: rgba(255,255,255,.08);
   }
-  .auth-logo-badge svg { width: 30px; height: 30px; }
-  .auth-app-title {
+  .auth-tree {
+    /* the logo's tree, oversized and faint, rooted off the bottom edge */
+    position: absolute; z-index: -1; right: -170px; bottom: -210px;
+    width: 480px; height: auto; opacity: .09; pointer-events: none;
+    filter: saturate(.6);
+  }
+  .auth-brand { display: flex; align-items: center; gap: 14px; }
+  .auth-brand-logo {
+    width: 40px; height: 58px; object-fit: contain; flex-shrink: 0;
+  }
+  .auth-brand-words { border-left: 1px solid rgba(255,255,255,.18); padding-left: 14px; }
+  .auth-brand-name { font-family: var(--display); font-size: 17px; font-weight: 600; color: #fff; letter-spacing: -0.01em; line-height: 1.2; }
+  .auth-brand-sub { font-size: 12px; color: rgba(227,236,247,.62); margin-top: 2px; }
+
+  .auth-pitch { max-width: 430px; }
+  .auth-pitch h2 {
     font-family: var(--display);
-    font-size: 21px; font-weight: 600; color: var(--text);
-    letter-spacing: -0.4px; margin-bottom: 6px;
+    font-size: clamp(27px, 2.5vw, 35px); line-height: 1.18; font-weight: 600;
+    letter-spacing: -0.025em; margin: 0 0 14px; color: #fff;
   }
-  .auth-app-subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 0; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
-  .auth-divider {
-    border: none; border-top: 1px solid var(--border);
-    margin: 28px 0;
+  .auth-pitch > p { font-size: 15px; line-height: 1.6; margin: 0; color: rgba(227,236,247,.72); }
+  .auth-points { list-style: none; margin: 34px 0 0; padding: 0; display: grid; gap: 18px; }
+  .auth-points li { display: grid; grid-template-columns: 36px 1fr; gap: 14px; align-items: start; }
+  .auth-pt-icon {
+    width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center;
+    background: rgba(76,154,245,.14); color: #7DB8F8;
+    box-shadow: inset 0 0 0 1px rgba(125,184,248,.22);
   }
-  .auth-prompt {
-    font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 22px;
+  .auth-pt-icon svg { width: 17px; height: 17px; }
+  .auth-points strong { display: block; font-size: 14px; font-weight: 600; color: #fff; margin-top: 1px; }
+  .auth-points span { display: block; font-size: 13px; line-height: 1.5; color: rgba(227,236,247,.62); margin-top: 2px; }
+  .auth-aside-foot { font-size: 12px; color: rgba(227,236,247,.5); }
+
+  /* Form side: follows the light/dark theme */
+  .auth-main {
+    flex: 1 1 auto; min-width: 0;
+    display: flex; flex-direction: column;
+    padding: 28px 32px; background: var(--surface);
   }
-  .auth-prompt strong { color: var(--blue-dark); font-weight: 700; }
-  :root:not(.light) .auth-prompt strong { color: var(--blue); }
+  .auth-form-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 0; }
+  .auth-card {
+    width: 100%; max-width: 360px;
+    animation: auth-in .45s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes auth-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .auth-mobile-brand { display: none; }
+  .auth-title {
+    font-family: var(--display);
+    font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em;
+    margin: 0; color: var(--text);
+  }
+  .auth-prompt { font-size: 14px; line-height: 1.55; color: var(--text-muted); margin: 10px 0 0; }
   .auth-google-btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; background: #fff; color: #3c4043;
-    border: 1px solid var(--border2); border-radius: var(--radius); padding: 13px 20px;
+    width: 100%; margin-top: 30px;
+    background: #fff; color: #3c4043;
+    border: 1px solid #dadce0; border-radius: 8px; padding: 11px 18px; min-height: 44px;
     font-size: 14px; font-weight: 600; font-family: var(--font);
-    cursor: pointer; transition: box-shadow 0.2s, transform 0.1s;
-    box-shadow: var(--shadow-sm);
+    cursor: pointer; transition: box-shadow 0.2s, background-color .15s, transform 0.1s;
   }
-  .auth-google-btn:hover { box-shadow: var(--shadow-md); }
+  .auth-google-btn:hover { background: #f8fafd; box-shadow: 0 1px 3px rgba(60,64,67,.18), 0 2px 8px rgba(60,64,67,.1); }
   .auth-google-btn:active { transform: scale(0.99); }
+  .auth-google-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   .auth-google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .auth-error {
     margin-top: 14px;
     background: var(--red-dim);
-    border: 1px solid color-mix(in srgb, var(--red) 30%, var(--border));
-    border-radius: var(--radius);
-    padding: 11px 14px;
-    font-size: 12px; color: var(--red); line-height: 1.5; display: none;
-    text-align: left;
+    border-radius: 8px;
+    box-shadow: inset 3px 0 0 var(--red);
+    padding: 11px 13px;
+    font-size: 12.5px; font-weight: 500; color: var(--text); line-height: 1.5; display: none;
   }
   .auth-error.visible { display: block; }
   .auth-loading {
-    margin-top: 18px; display: none; align-items: center;
-    justify-content: center; gap: 9px;
-    font-size: 12px; color: var(--text-muted);
+    margin-top: 16px; display: none; align-items: center; gap: 9px;
+    font-size: 12.5px; color: var(--text-muted);
   }
   .auth-loading.visible { display: flex; }
   .auth-spinner {
@@ -1092,9 +1123,28 @@
     border-radius: 50%;
     animation: spin 0.75s linear infinite;
   }
-  .auth-footer {
-    margin-top: 28px; font-size: 10px; color: var(--text-dim); line-height: 1.6;
+  .auth-divider { height: 1px; background: var(--border); margin: 30px 0 18px; }
+  .auth-note { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; line-height: 1.5; color: var(--text-muted); }
+  .auth-note + .auth-note { margin-top: 12px; }
+  .auth-note svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; color: var(--text-dim); }
+  .auth-note:first-of-type svg { color: var(--green); }
+  .auth-note b { font-weight: 600; color: var(--text); }
+  .auth-footer { font-size: 12px; color: var(--text-dim); text-align: center; }
+
+  @media (max-width: 1100px) { .auth-aside { flex-basis: 42%; padding: 40px; } }
+  @media (max-width: 860px) {
+    .auth-aside { display: none; }
+    .auth-main { padding: 20px 20px 22px; }
+    .auth-form-wrap { align-items: flex-start; padding: 4px 0 32px; }
+    .auth-mobile-brand {
+      display: flex; align-items: center; gap: 12px;
+      margin: 0 0 28px; padding: 12px 16px; border-radius: 12px;
+      background: linear-gradient(120deg, #081427 0%, #0D2547 55%, #15427C 100%);
+    }
+    .auth-mobile-brand .auth-brand-logo { width: 32px; height: 46px; }
+    .auth-mobile-brand .auth-brand-name { font-size: 15px; }
   }
+  @media (prefers-reduced-motion: reduce) { .auth-card { animation: none; } }
 
   /* ══════════════════════════════════════════
      ACCESSIBILITY
@@ -1122,33 +1172,69 @@
 
 <!-- ── GOOGLE SIGN-IN OVERLAY ── -->
 <div id="auth-overlay">
-  <div class="auth-card">
-    <div class="auth-logo-badge">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-        <path d="M7 8h10M7 12h10M7 16h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-      </svg>
+  <aside class="auth-aside">
+    <img class="auth-tree" data-lhc-logo alt="" aria-hidden="true">
+    <div class="auth-brand">
+        <img class="auth-brand-logo" data-lhc-logo alt="Legacy Healing Center">
+        <div class="auth-brand-words"><div class="auth-brand-name">Legacy Healing Center</div><div class="auth-brand-sub">Call Disposition Tracker</div></div>
     </div>
-    <div class="auth-app-title">Legacy Call Disposition Tracker</div>
-    <div class="auth-app-subtitle">Alliance Global Solutions</div>
-    <hr class="auth-divider">
-    <p class="auth-prompt">Sign in with your company Google account.<br>Only <strong>@allianceglobalsolutions.com</strong> addresses are permitted.</p>
-    <button class="auth-google-btn" id="google-signin-btn" onclick="initiateGoogleSignIn()">
-      <svg width="20" height="20" viewBox="0 0 24 24">
+    <div class="auth-pitch">
+      <h2>Close out every call with the right disposition.</h2>
+      <p>Review the day's calls from the shared sheet, set a disposition for each one, and see how much is left to finish.</p>
+      <ul class="auth-points">
+        <li>
+          <div class="auth-pt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+          <div><strong>Review each call</strong><span>Filter by status, agent or date to find answered, missed and hung-up calls.</span></div>
+        </li>
+        <li>
+          <div class="auth-pt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div><strong>Set dispositions fast</strong><span>Choose one per row, or select several calls and set them in bulk.</span></div>
+        </li>
+        <li>
+          <div class="auth-pt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg></div>
+          <div><strong>Track what's done</strong><span>See dispositioned, pending and percent complete, plus the daily report.</span></div>
+        </li>
+      </ul>
+    </div>
+    <div class="auth-aside-foot">&copy; <span id="auth-year">2026</span> Alliance Global Solutions</div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-form-wrap">
+      <div class="auth-card">
+        <div class="auth-mobile-brand">
+        <img class="auth-brand-logo" data-lhc-logo alt="Legacy Healing Center">
+        <div class="auth-brand-words"><div class="auth-brand-name">Legacy Healing Center</div><div class="auth-brand-sub">Call Disposition Tracker</div></div>
+        </div>
+        <h1 class="auth-title">Sign in</h1>
+        <p class="auth-prompt">Use your company Google account to open the Legacy Call Disposition Tracker.</p>
+        <button class="auth-google-btn" id="google-signin-btn" onclick="initiateGoogleSignIn()">
+          <svg width="20" height="20" viewBox="0 0 24 24">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
-      Continue with Google
-    </button>
-    <div class="auth-error" id="auth-error"></div>
-    <div class="auth-loading" id="auth-loading">
-      <div class="auth-spinner"></div>
-      <span>Verifying your account…</span>
+          Continue with Google
+        </button>
+        <div class="auth-error" id="auth-error" role="alert"></div>
+        <div class="auth-loading" id="auth-loading">
+          <div class="auth-spinner"></div>
+          <span>Verifying your account…</span>
+        </div>
+        <div class="auth-divider"></div>
+        <div class="auth-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span>Only verified <b>@allianceglobalsolutions.com</b> accounts can sign in.</span>
+        </div>
+        <div class="auth-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>You'll stay signed in on this browser for up to 8 hours.</span>
+        </div>
+      </div>
     </div>
-    <div class="auth-footer">Secure sign-in via Google OAuth 2.0 &nbsp;·&nbsp; Company accounts only</div>
-  </div>
+    <div class="auth-footer">Secured with Google OAuth 2.0 sign-in</div>
+  </main>
 </div>
 
 <header>
@@ -1537,6 +1623,11 @@ function initGoogleAuth() {
 
 // ── Bootstrap: restore session or show login ─────────────────────
 (function() {
+  // Reuse the header logo on the sign-in screen (avoids embedding the image twice)
+  const headerLogo = document.querySelector('header .logo-img');
+  if (headerLogo) document.querySelectorAll('[data-lhc-logo]').forEach(img => { img.src = headerLogo.src; });
+  const yr = document.getElementById('auth-year');
+  if (yr) yr.textContent = new Date().getFullYear();
   const saved = loadSession();
   if (saved) {
     grantAccess(saved);
